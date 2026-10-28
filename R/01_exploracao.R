@@ -3,26 +3,21 @@ library(ggplot2)
 
 dir.create("fig/01_exploracao", showWarnings = FALSE, recursive = TRUE)
 
-# 1. Carregar e limpar dados
+#Carregar e limpar dados
 nypd <- readRDS("data/nypd_2020_2026.rds")
 nypd <- as.data.frame(nypd)
 nypd <- nypd |> filter(!old_occurrence)
 
-# 2. Contar crimes por bairro
+# Contar crimes por bairro
 crimes_bairro <- count(nypd, boro_nm, sort = TRUE)
-
-# 3. Criar o gráfico
 grafico_bairros <- ggplot(crimes_bairro, aes(x = reorder(boro_nm, n), y = n)) +
   geom_col(fill = "steelblue") +
   coord_flip() +
   labs(title = "Crimes por Bairro (2020-2026)", x = "Bairro", y = "Ocorrências") +
   theme_minimal()
-
-# 4. Guardar o gráfico na pasta fig/
 ggsave("fig/01_exploracao/crimes_por_bairro.png", plot = grafico_bairros, width = 8, height = 5)
 
 
-# 5 Exploração dos Dados
 # Crimes por ano de reporte
 crimes_por_ano <- count(nypd, report_year)
 grafico_ano <- ggplot(crimes_por_ano, aes(x = as.factor(report_year), y = n)) +
@@ -50,24 +45,20 @@ grafico_tipos <- ggplot(top_crimes, aes(x = reorder(ofns_desc, n), y = n)) +
 ggsave("fig/01_exploracao/top_crimes.png", plot = grafico_tipos, width = 10, height = 6)
 
 # Crimes por hora do dia
-crimes_hora <- count(nypd, hour)
+crimes_hora <- nypd |> 
+  filter(!is.na(hour)) |> 
+  count(hour)
 grafico_hora <- ggplot(crimes_hora, aes(x = hour, y = n)) +
   geom_line(color = "steelblue", linewidth = 1.2) +
   geom_point(color = "steelblue", size = 2) +
   scale_x_continuous(breaks = 0:23) + 
+  scale_y_continuous(limits = c(0, NA), labels = scales::comma) + # Força o eixo Y a começar no 0
   labs(title = "Ciclo Diário de Crimes na Cidade de Nova Iorque", 
        subtitle = "O pico na hora 0 pode representar horas desconhecidas (00:00)",
        x = "Hora do Dia", y = "Ocorrências") +
   theme_minimal()
+dir.create("fig/01_exploracao", showWarnings = FALSE, recursive = TRUE)
 ggsave("fig/01_exploracao/crimes_por_hora.png", plot = grafico_hora, width = 9, height = 5)
-
-# Crimes por dia da semana
-crimes_dia_semana <- count(nypd, wday)
-grafico_dia <- ggplot(crimes_dia_semana, aes(x = wday, y = n)) +
-  geom_col(fill = "steelblue") +
-  labs(title = "Crimes por Dia da Semana", x = "Dia da Semana", y = "Ocorrências") +
-  theme_minimal()
-ggsave("fig/01_exploracao/crimes_dia_semana.png", plot = grafico_dia, width = 8, height = 5)
 
 
 
@@ -89,12 +80,23 @@ ggsave("fig/01_exploracao/vulnerabilidade.png", plot = grafico_vulnerabilidade, 
 # EIXO 2: Eficácia da Prevenção (O que e Onde)
 eficacia <- nypd |>
   filter(crm_atpt_cptd_cd %in% c("ATTEMPTED", "COMPLETED")) |>
-  count(prem_typ_desc, crm_atpt_cptd_cd, sort = TRUE) |>
-  slice_head(n = 15)
+  count(prem_typ_desc, crm_atpt_cptd_cd) |>
+  # Para filtrar os top 15 locais com maior volume total
+  group_by(prem_typ_desc) |>
+  mutate(total_local = sum(n)) |>
+  ungroup() |>
+  slice_max(total_local, n = 30) # 15 locais * 2 estados = 30 linhas
+
 grafico_eficacia <- ggplot(eficacia, aes(x = reorder(prem_typ_desc, n), y = n, fill = crm_atpt_cptd_cd)) +
   geom_col(position = "dodge") +
   coord_flip() +
-  labs(title = "Crimes Tentados vs. Concluídos por Local", x = "Tipo de Local", y = "Ocorrências", fill = "Estado") +
+  scale_fill_manual(values = c("COMPLETED" = "orange2", "ATTEMPTED" = "steelblue")) +
+  labs(
+    title = "Crimes Tentados vs. Concluídos por Local",
+    x = "Tipo de Local",
+    y = "Ocorrências",
+    fill = "Estado"
+  ) +
   theme_minimal()
 ggsave("fig/01_exploracao/eficacia.png", plot = grafico_eficacia, width = 10, height = 6)
 
@@ -113,9 +115,7 @@ grafico_evolucao <- ggplot(evolucao, aes(x = reorder(prem_typ_desc, n), y = n, f
 ggsave("fig/01_exploracao/evolucao_locais.png", plot = grafico_evolucao, width = 10, height = 6)
 
 #--------------------------------------------------------------------------------------------------------------------------------------
-
 # ANÁLISE DE VALORES NULOS, ERROS E ANOMALIAS
-
 # 1. Resumo de NAs por coluna
 auditoria_nas <- data.frame(
   coluna = names(nypd),
@@ -123,7 +123,6 @@ auditoria_nas <- data.frame(
   n_nas = sapply(nypd, function(x) sum(is.na(x))),
   pct_nas = sapply(nypd, function(x) round(sum(is.na(x)) / nrow(nypd) * 100, 2))
 )
-
 # 2. Contar valores literais "(null)" nas colunas de texto
 nulos_texto <- sapply(nypd, function(x) {
   if(is.character(x)) {
@@ -133,17 +132,14 @@ nulos_texto <- sapply(nypd, function(x) {
   }
 })
 auditoria_nas$n_null_literal <- nulos_texto
-
 # Imprimir a tabela completa com todas as colunas
 library(tidyr)
-
 auditoria_long <- auditoria_nas |> 
   mutate(
     # Calcular total de falhas (NAs + nulos literais) em percentagem
     total_falhas_pct = ((n_nas + n_null_literal) / nrow(nypd)) * 100
   ) |> 
   filter(total_falhas_pct > 0) # Mostrar apenas colunas com problemas
-
 grafico_auditoria <- ggplot(auditoria_long, aes(x = reorder(coluna, total_falhas_pct), y = total_falhas_pct)) +
   geom_col(fill = "steelblue") +
   coord_flip() +
@@ -154,6 +150,70 @@ grafico_auditoria <- ggplot(auditoria_long, aes(x = reorder(coluna, total_falhas
     y = "Percentagem de Valores Omissos (%)"
   ) +
   theme_minimal()
-
-# 3. Guardar o gráfico na pasta fig/
 ggsave("fig/01_exploracao/auditoria_dados_falta.png", plot = grafico_auditoria, width = 10, height = 7)
+
+#--------------------------------------------------------------------------------------------------------------
+# MAPA DE CALOR (HORA VS DIA DA SEMANA) 
+crimes_heatmap <- nypd |> 
+  filter(!is.na(hour), !is.na(wday)) |> 
+  count(wday, hour)
+grafico_heatmap <- ggplot(crimes_heatmap, aes(x = hour, y = wday, fill = n)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", labels = scales::comma) +
+  scale_x_continuous(breaks = 0:23) +
+  labs(
+    title = "Mapa de Calor: Concentração de Crimes por Hora e Dia da Semana",
+    x = "Hora do Dia",
+    y = "Dia da Semana",
+    fill = "Ocorrências"
+  ) +
+  theme_minimal()
+dir.create("fig/01_exploracao", showWarnings = FALSE, recursive = TRUE)
+ggsave("fig/01_exploracao/heatmap_hora_dia.png", plot = grafico_heatmap, width = 10, height = 6)
+
+#--------------------------------------------------------------------------------------------------------
+# GRAVIDADE DO CRIME POR BAIRRO 
+crimes_gravidade <- nypd |> 
+  filter(!is.na(boro_nm), !is.na(law_cat_cd)) |> 
+  count(boro_nm, law_cat_cd)
+grafico_gravidade <- ggplot(crimes_gravidade, aes(x = reorder(boro_nm, n, sum), y = n, fill = law_cat_cd)) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  scale_y_continuous(labels = scales::comma, limits = c(0, NA)) + # Eixo Y começa obrigatoriamente no 0
+  scale_fill_manual(values = c(
+    "FELONY"      = "orange2", 
+    "MISDEMEANOR" = "steelblue", 
+    "VIOLATION"   = "green4"  
+  )) +
+  labs(
+    title = "Volume de Crimes por Nível de Gravidade e Bairro",
+    subtitle = "Comparação absoluta entre Felonies, Misdemeanors e Violations",
+    x = "Bairro",
+    y = "Número de Ocorrências",
+    fill = "Nível de Ofensa"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    legend.position = "right"
+  )
+ggsave("fig/01_exploracao/gravidade_por_bairro.png", plot = grafico_gravidade, width = 10, height = 6)
+
+#----------------------------------------------------------------------------------------------------------------
+# TENDÊNCIA MENSAL / SAZONALIDADE 
+crimes_mes <- nypd |> 
+  filter(!is.na(occurred_on), !old_occurrence) |> 
+  mutate(mes = lubridate::month(occurred_on, label = TRUE, abbr = TRUE)) |> 
+  count(mes)
+grafico_mes <- ggplot(crimes_mes, aes(x = mes, y = n, group = 1)) +
+  geom_line(color = "steelblue", linewidth = 1.2) +
+  geom_point(color = "steelblue", size = 2.5) +
+  scale_y_continuous(limits = c(0, NA), labels = scales::comma) +
+  labs(
+    title = "Sazonalidade: Distribuição de Crimes por Mês do Ano",
+    x = "Mês",
+    y = "Ocorrências Totais"
+  ) +
+  theme_minimal()
+dir.create("fig/01_exploracao", showWarnings = FALSE, recursive = TRUE)
+ggsave("fig/01_exploracao/sazonalidade_mensal.png", plot = grafico_mes, width = 9, height = 5)
