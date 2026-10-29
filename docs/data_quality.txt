@@ -1,0 +1,753 @@
+=====================================================================
+Data quality checks: output
+Data: NYPD Complaint Data, NYC Open Data
+(complaints reported from January 2020 to June 2026)
+=====================================================================
+
+-------------------------------------------------------------------------------------------
+---- 1. File size ----
+-------------------------------------------------------------------------------------------
+Number of rows and columns. Expected: 3 386 974 rows and 39 columns (data dictionary).
+
+[1] 3386974      39
+
+-------------------------------------------------------------------------------------------
+---- 2. Duplicated complaint identifiers ----
+-------------------------------------------------------------------------------------------
+Number of repeated cmplnt_num values. Expected: 0 (one row per complaint).
+
+[1] 0
+
+-------------------------------------------------------------------------------------------
+---- 3. Missing values per column ----
+-------------------------------------------------------------------------------------------
+Three ways a value can be missing: NA, an empty string, or a placeholder text.
+For each column we have type, NA values, empty strings, the literal text "(null)", the value UNKNOWN,
+and the percentage of rows with any of the first three.
+"n/a" means the check does not apply (column is not text).
+
+              column      type      n_na n_empty n_null_text n_unknown pct_any
+1         hadevelopt character         0       0   3,375,906         0    99.7
+2           parks_nm character         0       0   3,366,373         0    99.4
+3       station_name character         0       0   3,265,176         0    96.4
+4   transit_district character 3,265,176       0           0         0    96.4
+5        housing_psa character   802,838       0   2,360,658         0    93.4
+6  loc_of_occur_desc character         0       0     666,634         0    19.7
+7     susp_age_group character         0       0     501,999 1,260,434    14.8
+8          susp_race character         0       0     501,999   861,736    14.8
+9           susp_sex character         0       0     501,999         0    14.8
+10      cmplnt_to_dt character   220,206       0           0         0     6.5
+11      cmplnt_to_tm character         0       0     218,304         0     6.4
+12     prem_typ_desc character         0       0      40,094         0     1.2
+13           boro_nm character     5,835       0           0         0     0.2
+14             pd_cd character     2,597       0           0         0    <0.1
+15           pd_desc character         0       0       2,597         0    <0.1
+16          vic_race character         0       0         787 1,079,436    <0.1
+17  crm_atpt_cptd_cd character         0       0         161         0    <0.1
+18       addr_pct_cd character       100       0           0         0    <0.1
+19         ofns_desc character         0       0          65         0    <0.1
+20       patrol_boro character         0       0          30         0    <0.1
+21          latitude   numeric        28     n/a         n/a       n/a    <0.1
+22         longitude   numeric        28     n/a         n/a       n/a    <0.1
+23     vic_age_group character         0       0           1 1,009,659    <0.1
+24           vic_sex character         0       0           1         0    <0.1
+25        cmplnt_num character         0       0           0         0       0
+26            rpt_dt character         0       0           0         0       0
+27      cmplnt_fr_dt character         0       0           0         0       0
+28      cmplnt_fr_tm character         0       0           0         0       0
+29        law_cat_cd character         0       0           0         0       0
+30             ky_cd character         0       0           0         0       0
+31        juris_desc character         0       0           0         0       0
+32 jurisdiction_code character         0       0           0         0       0
+33       reported_on      Date         0     n/a         n/a       n/a       0
+34       occurred_on      Date         0     n/a         n/a       n/a       0
+35       occurred_at   POSIXct         0     n/a         n/a       n/a       0
+36              hour   integer         0     n/a         n/a       n/a       0
+37              wday   ordered         0     n/a         n/a       n/a       0
+38       report_year   numeric         0     n/a         n/a       n/a       0
+39    old_occurrence   logical         0     n/a         n/a       n/a       0
+
+Example rows where transit_district is a real NA:
+
+   cmplnt_num   boro_nm station_name transit_district
+1   206887267 MANHATTAN       (null)             <NA>
+2   206887272 MANHATTAN       (null)             <NA>
+3   206888944     BRONX       (null)             <NA>
+4   206890910 MANHATTAN       (null)             <NA>
+5   206890988 MANHATTAN       (null)             <NA>
+6   206890989 MANHATTAN       (null)             <NA>
+7   206890991     BRONX       (null)             <NA>
+8   206890992     BRONX       (null)             <NA>
+9   206890993     BRONX       (null)             <NA>
+10  206890994  BROOKLYN       (null)             <NA>
+
+Example rows where hadevelopt holds the placeholder text "(null)":
+
+   cmplnt_num   boro_nm hadevelopt
+1   206887267 MANHATTAN     (null)
+2   206887272 MANHATTAN     (null)
+3   206888944     BRONX     (null)
+4   206890909 MANHATTAN     (null)
+5   206890910 MANHATTAN     (null)
+6   206890988 MANHATTAN     (null)
+7   206890989 MANHATTAN     (null)
+8   206890991     BRONX     (null)
+9   206890992     BRONX     (null)
+10  206890993     BRONX     (null)
+
+
+Drop the columns with missing values/"Null"/unknown?
+
+-------------------------------------------------------------------------------------------
+---- 4. Dates: occurrences before 2020 ----
+-------------------------------------------------------------------------------------------
+Year of occurrence for the rows with old_occurrence = TRUE
+(mix of late reports and impossible dates).
+
+   occurred_year    n
+1           1010    6
+2           1011    3
+3           1012    5
+4           1013    2
+5           1014    6
+6           1015    5
+7           1016    3
+8           1018    1
+9           1019    1
+10          1020    2
+11          1021    7
+12          1022   11
+13          1023   24
+14          1024   19
+15          1025    5
+16          1026    9
+17          1900    1
+18          1918    1
+19          1919    1
+20          1920    6
+21          1921    9
+22          1922    7
+23          1923    5
+24          1924    5
+25          1926    1
+26          1949    1
+27          1955    3
+28          1956    1
+29          1958    1
+30          1960    2
+31          1961    1
+32          1963    1
+33          1964    2
+34          1965    1
+35          1966    3
+36          1967    3
+37          1968    2
+38          1969    5
+39          1970   14
+40          1971   10
+41          1972   16
+42          1973   15
+43          1974    7
+44          1975   14
+45          1976   13
+46          1977    4
+47          1978    5
+48          1979    8
+49          1980   13
+50          1981    9
+51          1982    5
+52          1983   11
+53          1984   15
+54          1985   11
+55          1986   16
+56          1987   18
+57          1988   20
+58          1989   19
+59          1990   21
+60          1991   24
+61          1992   25
+62          1993   20
+63          1994   37
+64          1995   43
+65          1996   24
+66          1997   47
+67          1998   40
+68          1999   44
+69          2000  170
+70          2001   89
+71          2002  232
+72          2003  102
+73          2004  113
+74          2005  131
+75          2006  132
+76          2007  132
+77          2008  157
+78          2009  135
+79          2010  260
+80          2011  293
+81          2012  360
+82          2013  456
+83          2014  577
+84          2015  661
+85          2016  777
+86          2017 1043
+87          2018 1614
+88          2019 8457
+
+
+Delete them all? Keep only from 2017 (for example)?
+
+-------------------------------------------------------------------------------------------
+---- Date column types ----
+-------------------------------------------------------------------------------------------
+Class of the date columns. Date = day level, no time component.
+
+ reported_on  occurred_on cmplnt_to_dt 
+      "Date"       "Date"  "character" 
+
+-------------------------------------------------------------------------------------------
+---- 5. Dates: reported before it occurred ----
+-------------------------------------------------------------------------------------------
+Number of complaints whose report date is earlier than the occurrence date.
+
+[1] 17
+
+Gap in days (occurred_on - reported_on):
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   1.00    2.00    3.00   11.12   13.00   54.00 
+
+All cases:
+
+   cmplnt_num     ofns_desc occurred_on reported_on gap_days
+1   255069798 PETIT LARCENY  2022-05-25  2022-04-01       54
+2   238225146 PETIT LARCENY  2021-10-21  2021-09-16       35
+3   232423052 PETIT LARCENY  2021-08-18  2021-07-26       23
+4   289674920 PETIT LARCENY  2024-07-06  2024-06-14       22
+5   235180301 PETIT LARCENY  2021-10-04  2021-09-21       13
+6   293715179 PETIT LARCENY  2024-09-19  2024-09-10        9
+7   318841821 PETIT LARCENY  2026-01-11  2026-01-03        8
+8   232867734 PETIT LARCENY  2021-08-19  2021-08-12        7
+9   232760888 PETIT LARCENY  2021-08-11  2021-08-08        3
+10  239945814 PETIT LARCENY  2022-01-31  2022-01-28        3
+11  269283344 PETIT LARCENY  2023-06-02  2023-05-30        3
+12  326384800 PETIT LARCENY  2026-06-04  2026-06-01        3
+13  326324912 PETIT LARCENY  2026-05-31  2026-05-29        2
+14  241380884 PETIT LARCENY  2022-02-22  2022-02-21        1
+15  243139487 PETIT LARCENY  2022-04-01  2022-03-31        1
+16  250149826 PETIT LARCENY  2022-08-21  2022-08-20        1
+17  320085139 PETIT LARCENY  2026-02-06  2026-02-05        1
+
+I think we should delete these cases.
+
+-------------------------------------------------------------------------------------------
+---- 6. Dates: end before start ----
+-------------------------------------------------------------------------------------------
+Number of complaints whose end date (cmplnt_to_dt) is earlier than the occurrence date.
+
+[1] 33
+
+Gap in days (occurred_on - ended_on):
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+      1       2       6   22543     257  368902 
+
+All cases:
+
+   cmplnt_num                      ofns_desc occurred_on   ended_on gap_days
+1   219765984                  HARRASSMENT 2  2020-10-27 1010-10-21   368902
+2   295964434                  GRAND LARCENY  2024-11-05 1024-10-30   365249
+3   212700980                  HARRASSMENT 2  2020-05-03 2000-05-03     7305
+4   311496492                  GRAND LARCENY  2025-06-13 2024-06-10      368
+5   228321070  OFF. AGNST PUB ORD SENSBLTY &  2021-05-11 2020-05-11      365
+6   239362204 GRAND LARCENY OF MOTOR VEHICLE  2022-01-19 2021-01-19      365
+7   314380392  OFF. AGNST PUB ORD SENSBLTY &  2025-10-11 2024-10-11      365
+8   320775477   ASSAULT 3 & RELATED OFFENSES  2026-02-19 2025-02-19      365
+9   227189029                  PETIT LARCENY  2021-04-18 2020-08-04      257
+10  310581429                        ROBBERY  2025-08-02 2025-02-02      181
+11  261352711                  PETIT LARCENY  2022-12-10 2022-10-23       48
+12  269357014                  HARRASSMENT 2  2023-06-05 2023-05-06       30
+13  238921763 CRIMINAL MISCHIEF & RELATED OF  2022-01-10 2021-12-14       27
+14  310156487                  HARRASSMENT 2  2025-07-22 2025-07-08       14
+15  268717971                  PETIT LARCENY  2023-05-23 2023-05-10       13
+16  249020777                  PETIT LARCENY  2022-08-01 2022-07-25        7
+17  252686120                  HARRASSMENT 2  2022-10-16 2022-10-10        6
+18  219744415 CRIMINAL MISCHIEF & RELATED OF  2020-10-26 2020-10-21        5
+19  295535739                  HARRASSMENT 2  2024-10-21 2024-10-16        5
+20  221104065                       BURGLARY  2020-11-27 2020-11-23        4
+21  313420096                  HARRASSMENT 2  2025-09-24 2025-09-20        4
+22  318096466   ASSAULT 3 & RELATED OFFENSES  2025-12-28 2025-12-25        3
+23  223984412                  HARRASSMENT 2  2021-02-04 2021-02-02        2
+24  255548445 OFFENSES AGAINST PUBLIC ADMINI  2022-12-07 2022-12-05        2
+25  262237823                  HARRASSMENT 2  2023-01-03 2023-01-01        2
+26  293940291 CRIMINAL MISCHIEF & RELATED OF  2024-09-26 2024-09-24        2
+27  210601632                  PETIT LARCENY  2020-03-06 2020-03-05        1
+28  225275392                  PETIT LARCENY  2021-03-04 2021-03-03        1
+29  242249952   ASSAULT 3 & RELATED OFFENSES  2022-03-17 2022-03-16        1
+30  242910522 GRAND LARCENY OF MOTOR VEHICLE  2022-03-30 2022-03-29        1
+31  262964799                       BURGLARY  2023-02-03 2023-02-02        1
+32  274239085                       BURGLARY  2023-09-11 2023-09-10        1
+33  318055207                  PETIT LARCENY  2025-12-27 2025-12-26        1
+
+
+Same here. 
+
+
+-------------------------------------------------------------------------------------------
+---- 7. Times: round hours used as "unknown" ----
+-------------------------------------------------------------------------------------------
+Complaints at each exact minute around midnight, noon and 3 pm.
+This test looks for “round” times that might be used as a default value when no one knows 
+the actual time of the crime.
+
+  cmplnt_fr_tm     n
+1     00:00:00 40142
+2     00:01:00 23328
+3     11:59:00   764
+4     12:00:00 76513
+5     12:01:00   819
+6     14:59:00   753
+7     15:00:00 63413
+8     15:01:00  1132
+9     23:59:00   965
+
+
+12:00 → 76513, about 100 times more than its neighbors. The similar goes to the other hours. 
+
+It’s impossible for so many crimes to occur at exactly those specific times. 
+It’s more likely that, when the victim doesn’t know the time, the person recording the incident writes down a 
+conventional time to indicate “sometime that day" or "it was around 3".
+
+-------------------------------------------------------------------------------------------
+---- 8. Age groups: values outside the valid list ----
+-------------------------------------------------------------------------------------------
+Valid values: <18, 18-24, 25-44, 45-64, 65+, UNKNOWN.
+
+Suspect age group:
+
+   susp_age_group      n
+1          (null) 501999
+2            1022     26
+3            1023     20
+4            2021     19
+5            2022     17
+6            2024     15
+7            2023     13
+8            2020     10
+9            2025      9
+10             -1      7
+11             -3      5
+12           -969      5
+13           2026      5
+14           -973      4
+15           1024      4
+16            942      4
+17             -2      3
+18             -6      3
+19           -951      3
+20           -963      3
+21            953      3
+22            -47      2
+23             -5      2
+24            -50      2
+25            -52      2
+26            -74      2
+27           -941      2
+28           -946      2
+29           -953      2
+30           -956      2
+31           -961      2
+32           -962      2
+33           -965      2
+34           -971      2
+35           2019      2
+36            938      2
+37            940      2
+38            941      2
+39            964      2
+40            -10      1
+41            -12      1
+42            -30      1
+43            -33      1
+44            -55      1
+45          -5962      1
+46            -60      1
+47            -62      1
+48            -63      1
+49            -64      1
+50            -65      1
+51            -66      1
+52            -69      1
+53            -71      1
+54            -76      1
+55           -924      1
+56           -928      1
+57           -939      1
+58           -942      1
+59           -943      1
+60           -945      1
+61           -947      1
+62           -950      1
+63           -952      1
+64           -954      1
+65           -955      1
+66           -957      1
+67           -959      1
+68           -966      1
+69           -972      1
+70           -975      1
+71           -976      1
+72           -977      1
+73           1015      1
+74           1016      1
+75           1017      1
+76           1020      1
+77           1021      1
+78           1032      1
+79           1056      1
+80           1822      1
+81           1925      1
+82            924      1
+83            925      1
+84            927      1
+85            929      1
+86            930      1
+87            933      1
+88            934      1
+89            943      1
+90            946      1
+91            951      1
+92            952      1
+93            955      1
+94            956      1
+95            958      1
+96            963      1
+97            967      1
+
+Victim age group:
+
+   vic_age_group n
+1             -1 7
+2           1023 6
+3             -2 5
+4           -968 5
+5           -961 4
+6           -970 4
+7            949 4
+8             -3 3
+9            -30 3
+10           -60 3
+11          -958 3
+12          -960 3
+13          -964 3
+14            -4 2
+15           -48 2
+16            -5 2
+17            -6 2
+18           -61 2
+19           -65 2
+20          -926 2
+21          -938 2
+22          -948 2
+23          -951 2
+24          -959 2
+25          -962 2
+26          -963 2
+27          -965 2
+28          -967 2
+29          -971 2
+30          -972 2
+31          -973 2
+32          -975 2
+33          1018 2
+34          1022 2
+35           928 2
+36           934 2
+37           936 2
+38           939 2
+39           945 2
+40           950 2
+41           953 2
+42           963 2
+43        (null) 1
+44           -10 1
+45           -11 1
+46           -15 1
+47           -27 1
+48           -28 1
+49           -31 1
+50           -33 1
+51           -40 1
+52           -46 1
+53           -47 1
+54           -49 1
+55           -51 1
+56           -57 1
+57           -58 1
+58           -62 1
+59           -64 1
+60           -66 1
+61          -921 1
+62          -924 1
+63          -929 1
+64          -932 1
+65          -934 1
+66          -935 1
+67          -943 1
+68          -944 1
+69          -945 1
+70          -953 1
+71          -954 1
+72          -955 1
+73          -957 1
+74          -969 1
+75          1013 1
+76          1014 1
+77          1016 1
+78          1019 1
+79          1020 1
+80           931 1
+81           932 1
+82           937 1
+83           938 1
+84           940 1
+85           942 1
+86           943 1
+87           944 1
+88           946 1
+89           951 1
+90           957 1
+91           959 1
+92           960 1
+93           961 1
+94           962 1
+95           966 1
+96           968 1
+97           970 1
+98           978 1
+99           983 1
+
+Delete these groups? 
+
+-------------------------------------------------------------------------------------------
+---- 9. Victim sex: values that are not people ----
+-------------------------------------------------------------------------------------------
+  vic_sex       n
+1       F 1270658
+2       M 1146794
+3       D  529374
+4       E  425375
+5       L   14771
+6  (null)       1
+7       U       1
+
+
+# A tibble: 27 × 3
+   vic_sex ofns_desc                            n
+   <chr>   <chr>                            <int>
+ 1 (null)  HARRASSMENT 2                        1
+ 2 D       PETIT LARCENY                   314112
+ 3 D       CRIMINAL MISCHIEF & RELATED OF   62250
+ 4 D       GRAND LARCENY                    50028
+ 5 D       BURGLARY                         42242
+ 6 D       ROBBERY                          13414
+ 7 E       DANGEROUS DRUGS                  79140
+ 8 E       VEHICLE AND TRAFFIC LAWS         75816
+ 9 E       DANGEROUS WEAPONS                40667
+10 E       FORGERY                          27291
+11 E       CRIMINAL MISCHIEF & RELATED OF   27131
+12 F       HARRASSMENT 2                   331816
+13 F       ASSAULT 3 & RELATED OFFENSES    186437
+14 F       PETIT LARCENY                   157657
+15 F       GRAND LARCENY                   117970
+16 F       CRIMINAL MISCHIEF & RELATED OF   87918
+17 L       FELONY ASSAULT                    7928
+18 L       MISCELLANEOUS PENAL LAW           2343
+19 L       OFFENSES AGAINST PUBLIC ADMINI    1034
+20 L       OFFENSES AGAINST THE PERSON        929
+21 L       HARRASSMENT 2                      480
+22 M       HARRASSMENT 2                   188535
+23 M       PETIT LARCENY                   184948
+24 M       ASSAULT 3 & RELATED OFFENSES    170958
+25 M       GRAND LARCENY                   128338
+26 M       CRIMINAL MISCHIEF & RELATED OF   93511
+27 U       MURDER & NON-NEGL. MANSLAUGHTER      1
+
+
+
+# A tibble: 7 × 4
+  vic_sex       n pct_age_unkn pct_race_unkn
+  <chr>     <int>        <dbl>         <dbl>
+1 F       1270658          2             5.3
+2 M       1146794          2.9           6.3
+3 D        529374         99.1          98.7
+4 E        425375         99.9          97  
+5 L         14771         11.7          26  
+6 (null)        1          0             0  
+7 U             1          0           100  
+
+F and M: Only 2–3% have an unknown age, so they are people.
+D and E: 99% have an unknown age, so they are not people.
+
+D: The most common crime is petit larceny (petty theft), followed by burglary (breaking and entering) and robbery. 
+The victim is supposedly not a person, and someone stole something from them. That is typical in a store. 
+That's why we suppose it's “business or organization.”
+
+E: Drugs, weapons, traffic offenses, and forgery. In these crimes, no one is directly harmed, someone in possession of 
+drugs or an illegal weapon isn’t stealing from anyone. 
+In the U.S., in these cases, the injured party is the State. That's why we suppose it's “State of New York.”
+
+L: According to Step 1, these are individuals, only 12% are of unknown age. 
+According to Step 2, the crimes are unusual for typical victims. 
+Serious assaults and offenses against public administration (resisting or obstructing authority) dominate, 
+and there are almost no thefts, unlike what is seen with F and M. This suggests that police officers or 
+public officials are being assaulted while on duty.
+
+Lets check:
+                          pd_desc    n
+1    ASSAULT POLICE/PEACE OFFICER 7718
+2         RECKLESS ENDANGERMENT 1 1687
+3         RECKLESS ENDANGERMENT 2  925
+4  PUBLIC ADMINISTATION,UNCLASS M  514
+5                RESISTING ARREST  512
+6           HARASSMENT,SUBD 3,4,5  297
+7         AGGRAVATED HARASSMENT 2  229
+8       MAKING TERRORISTIC THREAT  212
+9  MENACING 1ST DEGREE (VICT PEAC  212
+10     HARASSMENT,SUBD 1,CIVILIAN  183
+
+
+Yes, it is confirmed L refers to police officers as victims.
+U and (null): 1 row each, negligible.
+
+-------------------------------------------------------------------------------------------
+---- 10. Coordinates: repeated points ----
+-------------------------------------------------------------------------------------------
+The 10 most frequent exact coordinates; a huge pile on one point deserves a look.
+
+   latitude longitude    n
+1  40.75042 -73.98928 7261
+2  40.73373 -73.87120 3719
+3  40.75769 -73.83411 3463
+4  40.82262 -73.93094 3437
+5  40.69100 -73.98346 2630
+6  40.87394 -73.90879 2628
+7  40.68445 -73.97775 2584
+8  40.75657 -73.87593 2568
+9  40.71461 -74.01144 2443
+10 40.65047 -73.86999 2420
+
+# A tibble: 10 × 11
+   latitude longitude     n boro      precinct top_offense   pct_top_offense top_premise      pct_top_premise pct_vic_business maps_link                                       
+      <dbl>     <dbl> <int> <chr>     <chr>    <chr>                   <dbl> <chr>                      <dbl>            <dbl> <chr>                                           
+ 1     40.8     -74.0  7261 MANHATTAN 14       PETIT LARCENY            66.6 DEPARTMENT STORE            78.4             87.1 https://www.google.com/maps?q=40.75042,-73.98928
+ 2     40.7     -73.9  3719 QUEENS    110      PETIT LARCENY            63.7 DEPARTMENT STORE            57.2             80.9 https://www.google.com/maps?q=40.73373,-73.87120
+ 3     40.8     -73.8  3463 QUEENS    109      PETIT LARCENY            78.3 DEPARTMENT STORE            45.9             80.7 https://www.google.com/maps?q=40.75769,-73.83411
+ 4     40.8     -73.9  3437 BRONX     44       PETIT LARCENY            65.5 CHAIN STORE                 47.2             78.4 https://www.google.com/maps?q=40.82262,-73.93094
+ 5     40.7     -74.0  2630 BROOKLYN  84       PETIT LARCENY            81.2 CHAIN STORE                 61.8             85.4 https://www.google.com/maps?q=40.69100,-73.98346
+ 6     40.9     -73.9  2628 BRONX     52       PETIT LARCENY            74.3 DEPARTMENT STORE            44               77.8 https://www.google.com/maps?q=40.87394,-73.90879
+ 7     40.7     -74.0  2584 BROOKLYN  78       PETIT LARCENY            65.9 CHAIN STORE                 55.7             79.9 https://www.google.com/maps?q=40.68445,-73.97775
+ 8     40.8     -73.9  2568 QUEENS    115      SEX CRIMES               56.9 AIRPORT TERMINAL            28.3              7   https://www.google.com/maps?q=40.75657,-73.87593
+ 9     40.7     -74.0  2443 MANHATTAN 1        PETIT LARCENY            92.9 CHAIN STORE                 60               98.6 https://www.google.com/maps?q=40.71461,-74.01144
+10     40.7     -73.9  2420 BROOKLYN  75       PETIT LARCENY            61.9 CHAIN STORE                 41.6             74   https://www.google.com/maps?q=40.65047,-73.86999
+
+10 most repeated points:
+- 9 of 10 are real hotspots, mostly petit larceny (62-93%) in department or chain
+  stores, with businesses as victims (74-99%). Keep them.
+- Point 8 (40.75657, -73.87593, precinct 115) is a default location, if you go on Google Maps
+  it falls right in front of the precinct 115 police station house (92-15 Northern Blvd).
+  Mostly sex crimes (57%) and mixed premises (airport terminal 28%), so these
+  complaints did not happen there, the station was used as their location.
+  
+-------------------------------------------------------------------------------------------
+---- 11. Coordinates: outside New York City ----
+-------------------------------------------------------------------------------------------
+Number of complaints outside an approximate bounding box of the five boroughs.
+
+[1] 18
+    cmplnt_num   boro_nm addr_pct_cd                       ofns_desc latitude longitude
+1    228834632 MANHATTAN           1        VEHICLE AND TRAFFIC LAWS        0         0
+2    265828516 MANHATTAN           1  INTOXICATED & IMPAIRED DRIVING        0         0
+3    276673195 MANHATTAN          25         MISCELLANEOUS PENAL LAW        0         0
+4    282350667 MANHATTAN          25    ASSAULT 3 & RELATED OFFENSES        0         0
+5    282952927 MANHATTAN           1                OTHER STATE LAWS        0         0
+6    294505018    QUEENS         101    ASSAULT 3 & RELATED OFFENSES        0         0
+7    294575060     BRONX          45        VEHICLE AND TRAFFIC LAWS        0         0
+8    294578261    QUEENS         101    ASSAULT 3 & RELATED OFFENSES        0         0
+9    295065966    QUEENS         113  OFFENSES AGAINST PUBLIC SAFETY        0         0
+10   296475843     BRONX          45  CRIMINAL MISCHIEF & RELATED OF        0         0
+11   296495815     BRONX          46                 DANGEROUS DRUGS        0         0
+12   297250046     BRONX          44     OFFENSES AGAINST THE PERSON        0         0
+13   297641587     BRONX          50        VEHICLE AND TRAFFIC LAWS        0         0
+14   297762689 MANHATTAN          34                   GRAND LARCENY        0         0
+15   298073143     BRONX          52                   HARRASSMENT 2        0         0
+16   298121437 MANHATTAN           1                   PETIT LARCENY        0         0
+17   298348699     BRONX          43  INTOXICATED & IMPAIRED DRIVING        0         0
+18 328017545H1     BRONX          40 MURDER & NON-NEGL. MANSLAUGHTER        0         0
+
+
+All 18 complaints outside the bounding box are at latitude 0, longitude 0, a placeholder for missing coordinates, 
+not real locations.
+
+
+-------------------------------------------------------------------------------------------
+---- 12. Borough and patrol borough agreement ----
+-------------------------------------------------------------------------------------------
+Each patrol borough should belong to a single borough.
+
+                 patrol_boro       boro_nm      n
+1                     (null)         BRONX     11
+2                     (null)     MANHATTAN      8
+3                     (null)      BROOKLYN      6
+4                     (null)        QUEENS      3
+5                     (null) STATEN ISLAND      2
+6    PATROL BORO BKLYN NORTH      BROOKLYN 474292
+7    PATROL BORO BKLYN NORTH          <NA>     75
+8    PATROL BORO BKLYN NORTH         BRONX     56
+9    PATROL BORO BKLYN NORTH        QUEENS     44
+10   PATROL BORO BKLYN NORTH     MANHATTAN     15
+11   PATROL BORO BKLYN NORTH STATEN ISLAND      4
+12   PATROL BORO BKLYN SOUTH      BROOKLYN 476008
+13   PATROL BORO BKLYN SOUTH          <NA>     41
+14   PATROL BORO BKLYN SOUTH         BRONX     22
+15   PATROL BORO BKLYN SOUTH        QUEENS     12
+16   PATROL BORO BKLYN SOUTH     MANHATTAN      9
+17         PATROL BORO BRONX         BRONX 673260
+18         PATROL BORO BRONX          <NA>     59
+19         PATROL BORO BRONX     MANHATTAN     27
+20         PATROL BORO BRONX      BROOKLYN     26
+21         PATROL BORO BRONX        QUEENS      9
+22         PATROL BORO BRONX STATEN ISLAND      4
+23   PATROL BORO BRONX NORTH         BRONX  30708
+24   PATROL BORO BRONX NORTH     MANHATTAN      9
+25   PATROL BORO BRONX SOUTH         BRONX  32441
+26   PATROL BORO BRONX SOUTH          <NA>      5
+27   PATROL BORO BRONX SOUTH     MANHATTAN      2
+28   PATROL BORO BRONX SOUTH        QUEENS      1
+29     PATROL BORO MAN NORTH     MANHATTAN 391299
+30     PATROL BORO MAN NORTH          <NA>   3030
+31     PATROL BORO MAN NORTH      BROOKLYN     68
+32     PATROL BORO MAN NORTH         BRONX     51
+33     PATROL BORO MAN NORTH        QUEENS     17
+34     PATROL BORO MAN NORTH STATEN ISLAND      2
+35     PATROL BORO MAN SOUTH     MANHATTAN 421308
+36     PATROL BORO MAN SOUTH          <NA>   2566
+37     PATROL BORO MAN SOUTH      BROOKLYN     37
+38     PATROL BORO MAN SOUTH        QUEENS     23
+39     PATROL BORO MAN SOUTH         BRONX     10
+40     PATROL BORO MAN SOUTH STATEN ISLAND      2
+41  PATROL BORO QUEENS NORTH        QUEENS 391676
+42  PATROL BORO QUEENS NORTH     MANHATTAN    944
+43  PATROL BORO QUEENS NORTH      BROOKLYN    138
+44  PATROL BORO QUEENS NORTH          <NA>     36
+45  PATROL BORO QUEENS NORTH         BRONX     10
+46  PATROL BORO QUEENS NORTH STATEN ISLAND      1
+47  PATROL BORO QUEENS SOUTH        QUEENS 345478
+48  PATROL BORO QUEENS SOUTH     MANHATTAN     39
+49  PATROL BORO QUEENS SOUTH      BROOKLYN     26
+50  PATROL BORO QUEENS SOUTH          <NA>     18
+51  PATROL BORO QUEENS SOUTH STATEN ISLAND      8
+52  PATROL BORO QUEENS SOUTH         BRONX      5
+53 PATROL BORO STATEN ISLAND STATEN ISLAND 143005
+54 PATROL BORO STATEN ISLAND        QUEENS      8
+55 PATROL BORO STATEN ISLAND          <NA>      5
+56 PATROL BORO STATEN ISLAND      BROOKLYN      3
+57 PATROL BORO STATEN ISLAND     MANHATTAN      2
