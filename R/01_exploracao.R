@@ -5,7 +5,7 @@ library(ggplot2)
 
 dir.create("fig/01_exploracao", showWarnings = FALSE, recursive = TRUE)
 
-#Carregar e limpar dados
+# Carregar e limpar dados
 nypd <- readRDS("data/nypd_2020_2026.rds")
 nypd <- as.data.frame(nypd)
 nypd <- nypd |> filter(!old_occurrence)
