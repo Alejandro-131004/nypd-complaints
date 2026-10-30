@@ -65,6 +65,14 @@ ggsave("fig/01_exploration/auditoria_dados_falta.png", plot = grafico_auditoria,
 
 # ---------------------------------------------------------------- #
 
+ # This initial phase of our project will be mostly dedicated to curious
+ # exploration and dataset learning. There will be no sequential thought
+ # processes to formulate more complex hypotheses yet.
+
+ # Here, we'll essentially be learning how to plot items correctly, how to
+ # color the properly and how to assign dimensions and axes according to
+ # the representation we are attempting to display.
+
  # We begin our experiment by creating simple visualizations
  # The goal here is to identify potentially significant yet straightforward
  # fequency differences between boros, years, times of day, etc

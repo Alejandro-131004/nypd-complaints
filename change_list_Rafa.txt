@@ -1,0 +1,6 @@
+Lista de Mudanças
+
+ 1. cor definida no topo da página (o prof faz sempre isso)
+ 2. alterei plot de crimes por local 2020-2025 para conter todos os anos dentro do intervalo, greyed out para todos exceto 2020 (verde) e 2025 (azul)
+ 3. troquei os eixos do heatmap crimes hora/dia (dá para perceber melhor que quanto mais aumenta o dia da semana a hora sofre um shift)
+ 4. troquei idades por pseudo-heatmap em vez de cores aleatórias na analise de crimes por faixa etária e premise
