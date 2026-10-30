@@ -8,6 +8,8 @@ orange <- "orange2"
 light_blue <- "lightblue"
 dark_blue <- "darkblue"
 nice_green <- "green4"
+grey <- "grey85"
+white <- "white"
 
 dir.create("fig/01_exploration", showWarnings = FALSE, recursive = TRUE)
 
@@ -15,6 +17,50 @@ dir.create("fig/01_exploration", showWarnings = FALSE, recursive = TRUE)
 nypd <- readRDS("data/nypd_2020_2026.rds")
 nypd <- as.data.frame(nypd)
 nypd <- nypd |> filter(!old_occurrence)
+
+# ---------------------------------------------------------------- #
+
+ # Before we can start visualizing, let's look at the dataset's 
+ # potential issues
+
+
+# ANÁLISE DE VALORES NULOS, ERROS E ANOMALIAS
+# 1. Resumo de NAs por coluna
+auditoria_nas <- data.frame(
+  coluna = names(nypd),
+  tipo = sapply(nypd, function(x) class(x)[1]),
+  n_nas = sapply(nypd, function(x) sum(is.na(x))),
+  pct_nas = sapply(nypd, function(x) round(sum(is.na(x)) / nrow(nypd) * 100, 2))
+)
+# 2. Contar valores literais "(null)" nas colunas de texto
+nulos_texto <- sapply(nypd, function(x) {
+  if(is.character(x)) {
+    sum(x == "(null)", na.rm = TRUE)
+  } else {
+    0
+  }
+})
+auditoria_nas$n_null_literal <- nulos_texto
+# Imprimir a tabela completa com todas as colunas
+library(tidyr)
+auditoria_long <- auditoria_nas |> 
+  mutate(
+    # Calcular total de falhas (NAs + nulos literais) em percentagem
+    total_falhas_pct = ((n_nas + n_null_literal) / nrow(nypd)) * 100
+  ) |> 
+  filter(total_falhas_pct > 0) # Mostrar apenas colunas com problemas
+grafico_auditoria <- ggplot(auditoria_long, aes(x = reorder(coluna, total_falhas_pct), y = total_falhas_pct)) +
+  geom_col(fill = dv_blue) +
+  coord_flip() +
+  labs(
+    title = "Auditoria de Qualidade: Percentagem de Dados em Falta por Coluna",
+    subtitle = "Inclui valores NA e strings literais '(null)'",
+    x = "Nome da Coluna",
+    y = "Percentagem de Valores Omissos (%)"
+  ) +
+  theme_minimal()
+ggsave("fig/01_exploration/auditoria_dados_falta.png", plot = grafico_auditoria, width = 10, height = 7)
+
 
 
 # ---------------------------------------------------------------- #
@@ -93,6 +139,7 @@ ggsave("fig/01_exploration/hourly_crime_frequency.png", plot = crimes_per_hour_p
 # Idea: I think we should use a same-color heatmap here, 
 # different colors might give off the wrong idea 
  
+
 # Age Group Vulnerability & premise of Crime
 age_vulnerability <- nypd |> 
   filter(vic_age_group != "UNKNOWN", !is.na(vic_age_group)) |>
@@ -102,6 +149,13 @@ age_vulnerability <- nypd |>
 age_vulnerability_plt <- ggplot(age_vulnerability, aes(x = reorder(prem_typ_desc, n), y = n, fill = vic_age_group)) +
   geom_col(position = "dodge") +
   coord_flip() +
+  
+  # Sort of manual heatmap to help understand age increase better with no particular scale
+  scale_fill_manual(values = c("<18"   = "#DCE6F0",
+                               "18-24" = light_blue,
+                               "25-44" = "#6E9BCB",
+                               "45-64" = "#2E75B6",
+                               "65+"   = dark_blue)) +
   labs(title = "Age Group Vulnerability per Premise",
        x = "premise", y = "# Reports", fill = "Victim Age") +
   theme_minimal()
@@ -135,59 +189,39 @@ att_vs_comp_plt <- ggplot(att_vs_comp, aes(x = reorder(prem_typ_desc, n), y = n,
 ggsave("fig/01_exploration/att_vs_comp.png", plot = att_vs_comp_plt, width = 10, height = 6)
 
 
-# EIXO 3: Evolução Pós-2020 (Quando e Onde)
-evolucao <- nypd |>
-  count(report_year, prem_typ_desc, sort = TRUE) |>
-  filter(report_year %in% c(2020, 2025)) |>
-  slice_head(n = 20)
-evolucao$report_year <- as.factor(evolucao$report_year)
-grafico_evolucao <- ggplot(evolucao, aes(x = reorder(prem_typ_desc, n), y = n, fill = report_year)) +
+# Yearly crime evolution per premise (2020-2025)
+
+# This plot has evolved a bit, it started off as top 10
+# so we decided to maintain it for consistency
+top_locations <- nypd |>
+  filter(report_year %in% 2020:2025) |>
+  count(prem_typ_desc, sort = TRUE) |>
+  slice_head(n = 10) |>
+  pull(prem_typ_desc)
+
+# Complaints per year for top10 locations only
+evolution <- nypd |>
+  filter(report_year %in% 2020:2025, prem_typ_desc %in% top_locations) |>
+  count(report_year, prem_typ_desc)
+evolution$report_year <- as.factor(evolution$report_year)
+
+# Middle years in grey (class rationale for line plots' clutter avoidance)
+evolution_plt <- ggplot(evolution, aes(x = reorder(prem_typ_desc, n), y = n, fill = report_year)) +
   geom_col(position = "dodge") +
   coord_flip() +
-  scale_fill_manual(values = c("2020" = light_blue, "2025" = dark_blue)) +
-  labs(title = "Evolução dos Crimes por Local (2020 vs 2025)", x = "Tipo de Local", y = "Ocorrências", fill = "Ano") +
+  
+  # 2020 is green, 2025 is blue
+  scale_fill_manual(values = c("2020" = nice_green, "2021" = grey, "2022" = grey,
+                               "2023" = grey, "2024" = grey, "2025" = dark_blue),
+                    breaks = c("2020", "2025")) +
+  
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Crimes per Premise, 2020 to 2025",
+       x = "Premise", y = "# Reports", fill = "Year") +
   theme_minimal()
-ggsave("fig/01_exploration/evolucao_locais.png", plot = grafico_evolucao, width = 10, height = 6)
 
+ggsave("fig/01_exploration/premise_yearly_evolution.png", plot = evolution_plt, width = 10, height = 7)
 
-
-#--------------------------------------------------------------------------------------------------------------------------------------
-# ANÁLISE DE VALORES NULOS, ERROS E ANOMALIAS
-# 1. Resumo de NAs por coluna
-auditoria_nas <- data.frame(
-  coluna = names(nypd),
-  tipo = sapply(nypd, function(x) class(x)[1]),
-  n_nas = sapply(nypd, function(x) sum(is.na(x))),
-  pct_nas = sapply(nypd, function(x) round(sum(is.na(x)) / nrow(nypd) * 100, 2))
-)
-# 2. Contar valores literais "(null)" nas colunas de texto
-nulos_texto <- sapply(nypd, function(x) {
-  if(is.character(x)) {
-    sum(x == "(null)", na.rm = TRUE)
-  } else {
-    0
-  }
-})
-auditoria_nas$n_null_literal <- nulos_texto
-# Imprimir a tabela completa com todas as colunas
-library(tidyr)
-auditoria_long <- auditoria_nas |> 
-  mutate(
-    # Calcular total de falhas (NAs + nulos literais) em percentagem
-    total_falhas_pct = ((n_nas + n_null_literal) / nrow(nypd)) * 100
-  ) |> 
-  filter(total_falhas_pct > 0) # Mostrar apenas colunas com problemas
-grafico_auditoria <- ggplot(auditoria_long, aes(x = reorder(coluna, total_falhas_pct), y = total_falhas_pct)) +
-  geom_col(fill = dv_blue) +
-  coord_flip() +
-  labs(
-    title = "Auditoria de Qualidade: Percentagem de Dados em Falta por Coluna",
-    subtitle = "Inclui valores NA e strings literais '(null)'",
-    x = "Nome da Coluna",
-    y = "Percentagem de Valores Omissos (%)"
-  ) +
-  theme_minimal()
-ggsave("fig/01_exploration/auditoria_dados_falta.png", plot = grafico_auditoria, width = 10, height = 7)
 
 #--------------------------------------------------------------------------------------------------------------
 # MAPA DE CALOR (HORA VS DIA DA SEMANA) 
@@ -195,7 +229,8 @@ crimes_heatmap <- nypd |>
   filter(!is.na(hour), !is.na(wday)) |> 
   count(wday, hour)
 grafico_heatmap <- ggplot(crimes_heatmap, aes(x = hour, y = wday, fill = n)) +
-  geom_tile(color = "white") +
+  geom_tile(color = white) +
+  coord_flip() +
   scale_fill_gradient(low = light_blue, high = dark_blue, labels = scales::comma) +
   scale_x_continuous(breaks = 0:23) +
   labs(
