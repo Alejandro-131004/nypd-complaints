@@ -1,0 +1,78 @@
+
+
+---- 13. Offence types ----
+Total complaints, number of distinct offence types, and complaints per type.
+
+Total complaints: 3386974 
+Complaints with a valid offence type: 3386909 
+Distinct offence types: 68 
+
+                              ofns_desc      n   pct
+1                         PETIT LARCENY 658755 19.45
+2                         HARRASSMENT 2 523633 15.46
+3          ASSAULT 3 & RELATED OFFENSES 358733 10.59
+4                         GRAND LARCENY 297486  8.78
+5        CRIMINAL MISCHIEF & RELATED OF 271031  8.00
+6                        FELONY ASSAULT 171985  5.08
+7              VEHICLE AND TRAFFIC LAWS 115281  3.40
+8         OFF. AGNST PUB ORD SENSBLTY & 114066  3.37
+9               MISCELLANEOUS PENAL LAW 109442  3.23
+10                              ROBBERY  99439  2.94
+11                             BURGLARY  89343  2.64
+12       GRAND LARCENY OF MOTOR VEHICLE  82559  2.44
+13                      DANGEROUS DRUGS  81289  2.40
+14                           SEX CRIMES  54373  1.61
+15       OFFENSES AGAINST PUBLIC ADMINI  48188  1.42
+16                    DANGEROUS WEAPONS  48046  1.42
+17      OTHER OFFENSES RELATED TO THEFT  37365  1.10
+18                              FORGERY  34797  1.03
+19                          THEFT-FRAUD  21316  0.63
+20       INTOXICATED & IMPAIRED DRIVING  20164  0.60
+21                    CRIMINAL TRESPASS  18914  0.56
+22             OFFENSES INVOLVING FRAUD  16016  0.47
+23                               FRAUDS  15779  0.47
+24                  ADMINISTRATIVE CODE  14092  0.42
+25        POSSESSION OF STOLEN PROPERTY  12200  0.36
+26                                 RAPE  10883  0.32
+27                     OTHER STATE LAWS   9544  0.28
+28        UNAUTHORIZED USE OF A VEHICLE   9342  0.28
+29          OFFENSES AGAINST THE PERSON   9043  0.27
+30       OTHER OFFENSES RELATED TO THEF   4497  0.13
+31                                ARSON   3987  0.12
+32       PETIT LARCENY OF MOTOR VEHICLE   2989  0.09
+33         NYS LAWS-UNCLASSIFIED FELONY   2983  0.09
+34      MURDER & NON-NEGL. MANSLAUGHTER   2597  0.08
+35                      BURGLAR'S TOOLS   2418  0.07
+36     OTHER STATE LAWS (NON PENAL LAW)   1913  0.06
+37      PROSTITUTION & RELATED OFFENSES   1722  0.05
+38       OTHER STATE LAWS (NON PENAL LA   1663  0.05
+39                             GAMBLING   1497  0.04
+40            CANNABIS RELATED OFFENSES   1211  0.04
+41       OFFENSES AGAINST PUBLIC SAFETY    972  0.03
+42        KIDNAPPING & RELATED OFFENSES    845  0.02
+43                   DISORDERLY CONDUCT    668  0.02
+44                    THEFT OF SERVICES    651  0.02
+45 AGRICULTURE & MRKTS LAW-UNCLASSIFIED    547  0.02
+46       ALCOHOLIC BEVERAGE CONTROL LAW    522  0.02
+47                 FRAUDULENT ACCOSTING    416  0.01
+48      CHILD ABANDONMENT/NON SUPPORT 1    264  0.01
+49                             JOSTLING    242  0.01
+50                             ESCAPE 3    197  0.01
+51         OFFENSES RELATED TO CHILDREN    164  0.00
+52        CHILD ABANDONMENT/NON SUPPORT    149  0.00
+53                ANTICIPATORY OFFENSES    142  0.00
+54       HOMICIDE-NEGLIGENT,UNCLASSIFIE    125  0.00
+55                 ENDAN WELFARE INCOMP     96  0.00
+56       UNLAWFUL POSS. WEAP. ON SCHOOL     56  0.00
+57         INTOXICATED/IMPAIRED DRIVING     44  0.00
+58            NEW YORK CITY HEALTH CODE     44  0.00
+59                    FELONY SEX CRIMES     38  0.00
+60                           KIDNAPPING     37  0.00
+61      NYS LAWS-UNCLASSIFIED VIOLATION     30  0.00
+62       LOITERING/GAMBLING (CARDS, DIC     26  0.00
+63           HOMICIDE-NEGLIGENT-VEHICLE     22  0.00
+64       DISRUPTION OF A RELIGIOUS SERV     12  0.00
+65                            LOITERING      7  0.00
+66                      FORTUNE TELLING      6  0.00
+67             OTHER TRAFFIC INFRACTION      5  0.00
+68       OFFENSES AGAINST MARRIAGE UNCL      1  0.00

@@ -204,7 +204,44 @@ print(nypd |>
         count(patrol_boro, boro_nm) |>
         arrange(patrol_boro, desc(n)))
 
+# ---- 13. Offence types ----
+section("13. Offence types",
+        "Total complaints, number of distinct offence types, and complaints per type.")
 
+# Keep only rows with a valid offence description
+valid_offences <- nypd |>
+  filter(!is.na(ofns_desc), !ofns_desc %in% c("", "(null)"))
+
+cat("Total complaints:", nrow(nypd), "\n")
+cat("Complaints with a valid offence type:", nrow(valid_offences), "\n")
+cat("Distinct offence types:", n_distinct(valid_offences$ofns_desc), "\n\n")
+
+# Complaints per offence type, most frequent first
+offence_counts <- valid_offences |>
+  count(ofns_desc, sort = TRUE) |>
+  mutate(pct = round(100 * n / sum(n), 2))
+
+print(offence_counts)
+
+
+# Values that do not represent a race
+not_race <- c("", "(null)", "UNKNOWN")
+
+# Unique victim races
+vic_races <- sort(unique(nypd$vic_race))
+vic_races <- vic_races[!vic_races %in% not_race]
+
+# Unique suspect races
+susp_races <- sort(unique(nypd$susp_race))
+susp_races <- susp_races[!susp_races %in% not_race]
+
+# How many there are
+length(vic_races)
+length(susp_races)
+
+# The name of each one
+print(vic_races)
+print(susp_races)
 
 # Stop writing to the file
 sink()

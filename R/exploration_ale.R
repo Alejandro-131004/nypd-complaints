@@ -1,139 +1,272 @@
-#install.packages(c("dplyr", "ggplot2"))
-
 library(dplyr)
 library(ggplot2)
 
-# 1. Carregar e limpar dados
-nypd <- readRDS("data/nypd_2020_2026.rds")
-nypd <- as.data.frame(nypd)
-nypd <- nypd |> filter(!old_occurrence)
+dv_blue <- "#2E75B6"
+orange <- "orange2"
+light_blue <- "lightblue"
+dark_blue <- "darkblue"
+nice_green <- "green4"
 
-# 2. Contar crimes por bairro
-crimes_bairro <- count(nypd, boro_nm, sort = TRUE)
+source <- "Data: NYPD Complaint Data, NYC Open Data (complaints reported from January 2020 to June 2026)"
+dir.create("fig/01_exploration", showWarnings = FALSE, recursive = TRUE)
 
-# 3. Criar o gráfico
-grafico_bairros <- ggplot(crimes_bairro, aes(x = reorder(boro_nm, n), y = n)) +
-  geom_col(fill = "steelblue") +
+nypd <- readRDS("data/nypd_clean.rds")
+
+nypd_ocorr <- nypd |> filter(!old_occurrence)
+
+# 10 and 15 most frequent premise types
+top10 <- nypd |> filter(!is.na(prem_typ_desc))|> count(prem_typ_desc, sort = TRUE) |> slice_head(n=10) |> pull(prem_typ_desc)
+top15 <- nypd |> filter(!is.na(prem_typ_desc)) |> count(prem_typ_desc, sort = TRUE) |> slice_head(n=15) |> pull(prem_typ_desc)
+
+# Check
+#nrow(nypd)
+#top10
+
+
+
+# We begin our experiment by creating simple visualizations
+# The goal here is to identify potentially significant yet straightforward
+# Frequency differences between boros, years, times of day, etc
+
+
+# 1. Borough Crime Frequency
+boro_crimes <- nypd |> filter(!is.na(boro_nm)) |> count(boro_nm)
+boro_crimes_plt <- ggplot(boro_crimes, aes(x = reorder(boro_nm, n), y = n)) +
+  geom_col(fill = dv_blue) +
   coord_flip() +
-  labs(title = "Crimes por Bairro (2020-2026)", x = "Bairro", y = "Ocorrências") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Boro Crime Frequency", x = "Boro", y = "Number of Complaints", caption = source) + 
   theme_minimal()
 
-# 4. Guardar o gráfico na pasta fig/
-ggsave("fig/crimes_por_bairro.png", plot = grafico_bairros, width = 8, height = 5)
+ggsave("fig/01_exploration/boro_crime_frequency.png", plot = boro_crimes_plt, width = 8, height = 5, dpi = 300)
 
 
-# 5 Exploração dos Dados
-# Crimes por ano de reporte
-crimes_por_ano <- count(nypd, report_year)
-grafico_ano <- ggplot(crimes_por_ano, aes(x = as.factor(report_year), y = n)) +
-  geom_col(fill = "steelblue") +
-  labs(title = "Crimes Reportados por Ano (2020-2026)", x = "Ano", y = "Ocorrências") +
+# 2. Yearly report frequency
+crimes_per_year <- nypd |> filter(report_year <= 2025) |> count(report_year)
+yearly_crimes_plt <- ggplot(crimes_per_year, aes(x = factor(report_year), y = n)) +
+  geom_col(fill = dv_blue) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Yearly Report Frequency (2020-2025)", subtitle = "2026 omitted: only January-June available", x = "Year", y = "Number of Complaints", caption = source) +
   theme_minimal()
-ggsave("fig/crimes_por_ano.png", plot = grafico_ano, width = 8, height = 5)
 
-# Nível de gravidade dos crimes (Felony, Misdemeanor, Violation)
-crimes_gravidade <- count(nypd, law_cat_cd, sort = TRUE)
-grafico_gravidade <- ggplot(crimes_gravidade, aes(x = reorder(law_cat_cd, n), y = n)) +
-  geom_col(fill = "steelblue") +
+ggsave("fig/01_exploration/crimes_per_year.png", plot = yearly_crimes_plt, width = 8, height = 5, dpi = 300)
+
+
+# 3. Top 20 most common crime types
+crime_types <- count(nypd, ofns_desc, sort = TRUE) |> slice_head(n = 20)
+crime_types_plt <- ggplot(crime_types, aes(x = reorder(ofns_desc, n), y = n)) +
+  geom_col(fill = dv_blue) +
   coord_flip() +
-  labs(title = "Nível de Gravidade dos Crimes", x = "Gravidade", y = "Ocorrências") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Top 20 Most Reported Crimes", x = "Offence Description", y = "Number of Complaints", caption = source) +
   theme_minimal()
-ggsave("fig/crimes_gravidade.png", plot = grafico_gravidade, width = 8, height = 5)
 
-# Top 20 tipos de crimes mais comuns
-top_crimes <- count(nypd, ofns_desc, sort = TRUE) |> slice_head(n = 20)
-grafico_tipos <- ggplot(top_crimes, aes(x = reorder(ofns_desc, n), y = n)) +
-  geom_col(fill = "steelblue") +
-  coord_flip() +
-  labs(title = "Top 20 Tipos de Crimes mais Reportados", x = "Descrição do Crime", y = "Ocorrências") +
-  theme_minimal()
-ggsave("fig/top_crimes.png", plot = grafico_tipos, width = 10, height = 6)
+ggsave("fig/01_exploration/crime_types.png", plot = crime_types_plt, width = 10, height = 6, dpi = 300)
 
-# Crimes por hora do dia
-crimes_hora <- count(nypd, hour)
-grafico_hora <- ggplot(crimes_hora, aes(x = hour, y = n)) +
-  geom_line(color = "steelblue", linewidth = 1.2) +
-  geom_point(color = "steelblue", size = 2) +
+
+# 4. Crime frequency per hour
+
+# Check exact times that may be placeholders for "unknown time"
+# Result: 12:00:00 = 74630 complaints ; 00:00:00 = 37899 complaints
+
+# Simple cleanup (NaN removal) & count
+crimes_per_hour <- nypd_ocorr |> 
+  filter(!is.na(hour)) |> 
+  count(hour)
+
+# Important to mention that this considers the approximate hour the crime
+# was committed, not the time of the report!
+
+crimes_per_hour_plt <- ggplot(crimes_per_hour, aes(x = hour, y = n)) +
+  geom_line(colour = dv_blue, linewidth = 1.2) +
+  geom_point(colour = dv_blue, size = 2) +
   scale_x_continuous(breaks = 0:23) + 
-  labs(title = "Ciclo Diário de Crimes na Cidade de Nova Iorque", 
-       subtitle = "O pico na hora 0 pode representar horas desconhecidas (00:00)",
-       x = "Hora do Dia", y = "Ocorrências") +
+  
+  # Small fix that forces y=0 as starting point instead of 
+  # around the lowest value
+  scale_y_continuous(limits = c(0, NA), labels = scales::comma) + 
+  labs(title = "NY City Crime Report Frequency Per Hour", 
+       subtitle = "Unknown times may be recorded as 00:00 or 12:00",
+       x = "Time of Day", y = "Number of Complaints", caption = source) +
   theme_minimal()
-ggsave("fig/crimes_por_hora.png", plot = grafico_hora, width = 9, height = 5)
 
-# Crimes por dia da semana
-crimes_dia_semana <- count(nypd, wday)
-grafico_dia <- ggplot(crimes_dia_semana, aes(x = wday, y = n)) +
-  geom_col(fill = "steelblue") +
-  labs(title = "Crimes por Dia da Semana", x = "Dia da Semana", y = "Ocorrências") +
-  theme_minimal()
-ggsave("fig/crimes_dia_semana.png", plot = grafico_dia, width = 8, height = 5)
+ggsave("fig/01_exploration/hourly_crime_frequency.png", plot = crimes_per_hour_plt, width = 9, height = 5, dpi = 300)
 
 
-# 5. Exploração de cruzamento de variáveis
-# EIXO 1: Vulnerabilidade (Quem e Onde)
-vulnerabilidade <- nypd |> 
-  filter(vic_age_group != "UNKNOWN", !is.na(vic_age_group)) |>
-  count(vic_age_group, prem_typ_desc, sort = TRUE) |>
-  slice_head(n = 15)
-grafico_vulnerabilidade <- ggplot(vulnerabilidade, aes(x = reorder(prem_typ_desc, n), y = n, fill = vic_age_group)) +
+
+# ---------------------------------------------------------------- #
+
+
+# This section explores more complex data relationships
+# Our goal here is to start experimenting with variable connections
+# and how they affect report ratios and frequency 
+
+# Idea: We think we should use a same-colour heatmap here, 
+# different colours might give off the wrong idea 
+
+
+# 5. Age Group Vulnerability & premise of Crime
+age_vulnerability <- nypd |> 
+  filter(vic_age_group != "UNKNOWN", !is.na(vic_age_group),
+         prem_typ_desc %in% top10) |>
+  count(prem_typ_desc, vic_age_group)
+
+age_vulnerability$vic_age_group <- factor(age_vulnerability$vic_age_group, levels = c("<18", "18-24", "25-44", "45-64", "65+", "UNKNOWN"))
+
+age_vulnerability_plt <- ggplot(age_vulnerability, aes(x = reorder(prem_typ_desc, n), y = n, fill = vic_age_group)) +
   geom_col(position = "dodge") +
   coord_flip() +
-  labs(title = "Vítimas por Local e Grupo Etário", x = "Tipo de Local", y = "Ocorrências", fill = "Idade") +
+  
+  # Sort of manual heatmap to help understand age increase better with no particular scale
+  scale_fill_manual(values = c("<18"   = "#DCE6F0",
+                               "18-24" = light_blue,
+                               "25-44" = "#6E9BCB",
+                               "45-64" = dv_blue,
+                               "65+"   = dark_blue)) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Age Group Vulnerability per Premise",
+       x = "premise", y = "Number of Complaints", fill = "Victim Age", caption = source) +
   theme_minimal()
-ggsave("fig/vulnerabilidade.png", plot = grafico_vulnerabilidade, width = 10, height = 6)
 
-# EIXO 2: Eficácia da Prevenção (O que e Onde)
-# Step 1: pick the 15 premises with most complaints (attempted + completed together)
-top_premises <- nypd |>
+ggsave("fig/01_exploration/age_vulnerability.png", plot = age_vulnerability_plt, width = 10, height = 6, dpi = 300)
+
+
+# 6. Attempted vs completed crimes per premise
+att_vs_comp <- nypd |>
+  
+  # Get attempted-completed counts from the crm_atpt_cptd_cd column
   filter(crm_atpt_cptd_cd %in% c("ATTEMPTED", "COMPLETED"),
-         !is.na(prem_typ_desc), prem_typ_desc != "(null)") |>
+         prem_typ_desc %in% top15) |>
+  count(prem_typ_desc, crm_atpt_cptd_cd)
+
+att_vs_comp_plt <- ggplot(att_vs_comp, aes(n, reorder(prem_typ_desc, n),fill = crm_atpt_cptd_cd)) +
+  geom_col(position = "fill", width = 0.7) +
+  scale_fill_manual(values = c("COMPLETED" = orange, "ATTEMPTED" = dv_blue)) +
+  scale_x_continuous(labels = scales::percent) +
+  labs(title = "Attempted vs Completed Crimes per Premise",
+       x = "% of Complaints", y = "premise", fill = "Crime Status", caption = source) +
+  theme_minimal()
+
+ggsave("fig/01_exploration/att_vs_comp.png", plot = att_vs_comp_plt, width = 10, height = 6, dpi = 300)
+
+# 7. Yearly crime evolution per premise (2020-2025)
+
+# This plot has evolved a bit, it started off as top 10
+# so we decided to maintain it for consistency
+top_locations <- nypd |>
+  filter(report_year %in% 2020:2025) |>
   count(prem_typ_desc, sort = TRUE) |>
-  slice_head(n = 15) |>
+  slice_head(n = 10) |>
   pull(prem_typ_desc)
 
-# Step 2: count attempted vs completed only within those premises
-eficacia <- nypd |>
-  filter(crm_atpt_cptd_cd %in% c("ATTEMPTED", "COMPLETED"),
-         prem_typ_desc %in% top_premises) |>
-  count(prem_typ_desc, crm_atpt_cptd_cd) |>
-  # Order premises by total volume (largest at the top after coord_flip)
-  mutate(prem_typ_desc = factor(prem_typ_desc, levels = rev(top_premises)))
+# Number of Complaints per year for top10 locations only
+evolution <- nypd |>
+  filter(report_year %in% 2020:2025, prem_typ_desc %in% top_locations) |>
+  count(report_year, prem_typ_desc)
+evolution$report_year <- as.factor(evolution$report_year)
 
-grafico_eficacia <- ggplot(eficacia, aes(x = prem_typ_desc, y = n, fill = crm_atpt_cptd_cd)) +
+# Middle years in grey (class rationale for line plots' clutter avoidance)
+evolution_plt <- ggplot(evolution, aes(x = reorder(prem_typ_desc, n), y = n, fill = report_year)) +
   geom_col(position = "dodge") +
   coord_flip() +
-  labs(title = "Crimes Tentados vs. Concluídos por Local", x = "Tipo de Local", y = "Ocorrências", fill = "Estado") +
+  
+  # 2020 is green, 2025 is blue
+  scale_fill_manual(values = c("2020" = nice_green, "2021" = "grey70", "2022" = "grey70",
+                               "2023" = "grey70", "2024" = "grey70", "2025" = dark_blue),
+                    breaks = c("2020", "2025")) +
+  
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Crimes per Premise, 2020 to 2025",
+       x = "Premise", y = "Number of Complaints", fill = "Year", caption = source) +
   theme_minimal()
-grafico_eficacia
-ggsave("fig/exploracao_01/eficacia.png", plot = grafico_eficacia, width = 10, height = 6)
+
+ggsave("fig/01_exploration/premise_yearly_evolution.png", plot = evolution_plt, width = 10, height = 7, dpi = 300)
 
 
-# EIXO 3: Evolução Pós-2020 (Quando e Onde)
-evolucao <- nypd |>
-  count(report_year, prem_typ_desc, sort = TRUE) |>
-  filter(report_year %in% c(2020, 2025)) |>
-  slice_head(n = 20)
-evolucao$report_year <- as.factor(evolucao$report_year)
-grafico_evolucao <- ggplot(evolucao, aes(x = reorder(prem_typ_desc, n), y = n, fill = report_year)) +
+#--------------------------------------------------------------------------------------------------------------
+# 8. Heatmap (Hour x Weekday) 
+crimes_heatmap <- nypd_ocorr |> 
+  filter(!is.na(hour), !is.na(wday)) |> 
+  count(wday, hour)
+heatmap_plt <- ggplot(crimes_heatmap, aes(x = hour, y = wday, fill = n)) +
+  geom_tile(colour = "white") +
+  coord_flip() +
+  scale_fill_gradient(low = light_blue, high = dark_blue, labels = scales::comma) +
+  scale_x_continuous(breaks = 0:23) +
+  labs(
+    title = "Heatmap: Crime Concentration by Hour and Day of the Week",
+    x = "Hour of Day",
+    y = "Day of the Week",
+    fill = "Complaints",
+    caption = source
+  ) +
+  theme_minimal()
+dir.create("fig/01_exploration", showWarnings = FALSE, recursive = TRUE)
+ggsave("fig/01_exploration/heatmap_hour_weekday.png", plot = heatmap_plt, width = 10, height = 6, dpi = 300)
+
+
+#--------------------------------------------------------------------------------------------------------
+# 9. Offence level by borough
+crimes_severity <- nypd |> 
+  filter(!is.na(boro_nm), !is.na(law_cat_cd)) |> 
+  count(boro_nm, law_cat_cd)
+crimes_severity$law_cat_cd
+
+severity_plt <- ggplot(crimes_severity, aes(x = reorder(boro_nm, n, sum), y = n, fill = law_cat_cd)) +
   geom_col(position = "dodge") +
   coord_flip() +
-  scale_fill_manual(values = c("2020" = "lightblue", "2025" = "darkblue")) +
-  labs(title = "Evolução dos Crimes por Local (2020 vs 2025)", x = "Tipo de Local", y = "Ocorrências", fill = "Ano") +
+  scale_y_continuous(labels = scales::comma, limits = c(0, NA)) + # Y axis must start at 0
+  scale_fill_manual(values = c(
+    "FELONY"      = orange, 
+    "MISDEMEANOR" = dv_blue, 
+    "VIOLATION"   = nice_green  
+  )) +
+  labs(
+    title = "Crime Volume by Offence Level and Borough",
+    subtitle = "Absolute comparison of Felonies, Misdemeanors and Violations",
+    x = "Borough",
+    y = "Number of Complaints",
+    fill = "Offence Level", 
+    caption = source
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    legend.position = "right"
+  )
+ggsave("fig/01_exploration/severity_by_borough.png", plot = severity_plt, width = 10, height = 6)
+
+#----------------------------------------------------------------------------------------------------------------
+
+# 10. Seasonality 
+crimes_mes <- nypd_ocorr |> 
+  filter(occurred_on >= as.Date("2020-01-01"), occurred_on <= as.Date("2025-12-31")) |>
+  count(mes = as.integer(format(occurred_on, "%m")))
+
+grafico_mes <- ggplot(crimes_mes, aes(x = mes, y = n)) +
+  geom_line(colour = dv_blue, linewidth = 1.2) +
+  geom_point(colour = dv_blue, size = 2.5) +
+  scale_x_continuous(breaks = 1:12, labels = month.abb) +
+  scale_y_continuous(limits = c(0, NA), labels = scales::comma) +
+  labs(
+    title = "Complaints by Month of Occurrence",
+    x = NULL,
+    y = "Complaints",
+    caption = source
+  ) +
   theme_minimal()
-ggsave("fig/evolucao_locais.png", plot = grafico_evolucao, width = 10, height = 6)
+ggsave("fig/01_exploration/monthly_seasonality.png", plot = grafico_mes, width = 9, height = 5, dpi = 300)
 
+#----------------------------------------------------------------------------------------------------------------
 
-
-# Offence level (felony / misdemeanor / violation) for each of the top 20 offence types
-
-gravidade_crimes <- nypd |>
-  filter(ofns_desc %in% top_crimes$ofns_desc,
+# 11. Offence level (felony / misdemeanor / violation) for each of the top 20 offence types
+offence_severity <- nypd |>
+  filter(ofns_desc %in% crime_types$ofns_desc,
          law_cat_cd %in% c("FELONY", "MISDEMEANOR", "VIOLATION")) |>
   count(ofns_desc, law_cat_cd)
 
-grafico_gravidade_crimes <- ggplot(
-  gravidade_crimes,
+offence_severity_plt <- ggplot(
+  offence_severity,
   aes(x = reorder(ofns_desc, n), y = n, fill = law_cat_cd)
 ) +
   geom_col(position = "dodge") +
@@ -149,15 +282,12 @@ grafico_gravidade_crimes <- ggplot(
   theme_minimal()
 
 # Display the plot
-grafico_gravidade_crimes
+offence_severity_plt
 
 # Save the plot
 ggsave(
-  "fig/exploracao_01/crimes_por_gravidade.png",
-  plot = grafico_gravidade_crimes,
+  "fig/01_exploration/crimes_by_severity.png",
+  plot = offence_severity_plt,
   width = 12,
   height = 9
 )
-
-
-
