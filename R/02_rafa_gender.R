@@ -226,29 +226,37 @@ ggsave("fig/02_exploration/02_rafa/gender_age/sex_percent_severity_borough.png",
 #     and felonies (with the small exception of Bronx Misdemeanors)
 
 
-# 7. Offence counts by victim sex, one table per offence level
 sex_off <- nypd |>
   filter(vic_sex %in% c("M", "F"), !is.na(ofns_desc), !is.na(law_cat_cd)) |>
   count(law_cat_cd, ofns_desc, vic_sex) |>
   group_by(law_cat_cd, ofns_desc) |>
-  mutate(total = sum(n)) |>                    # total for both sexes, used for ordering
+  
+  # total, used for ordering; ratio = this sex's count / other sex's count
+  mutate(total = sum(n),
+         ratio = n / (total - n)) |>
   group_by(law_cat_cd) |>
-  filter(dense_rank(desc(total)) <= 10) |>     # top 10 offences per level
+  
+  # top 7 chosen manually (magnitude)
+  filter(dense_rank(desc(total)) <= 7) |>
   ungroup()
 
-ggplot(sex_off, aes(x = vic_sex, y = reorder(ofns_desc, total), fill = n)) +
+ggplot(sex_off, aes(x = vic_sex, y = reorder(ofns_desc, total), fill = log2(ratio))) +
   geom_tile(colour = white) +
-  geom_text(aes(label = scales::comma(n)), size = 3) +
+  geom_text(aes(label = paste0(scales::comma(n), "\n(", round(ratio, 1), "×)")), size = 3) +
   facet_wrap(~ law_cat_cd, scales = "free_y", ncol = 3) +
   scale_x_discrete(labels = c("F" = "Female", "M" = "Male"), position = "top") +
-  scale_fill_gradient(low = white, high = "firebrick", labels = scales::comma) +
+  scale_fill_gradient2(low = dv_blue, mid = white, high = "firebrick", midpoint = 0,
+                       limits = c(-2, 2), oob = scales::squish,
+                       breaks = c(-2, -1, 0, 1, 2),
+                       labels = c("¼×", "½×", "1×", "2×", "4×")) +
   labs(
-    title = "Offence Counts by Victim Sex, per Offence Level",
-    x     = NULL,
-    y     = NULL,
-    fill  = "Complaints") +
+    title   = "Offence Counts by Victim Sex, per Offence Level",
+    x       = NULL,
+    y       = NULL,
+    fill    = "Times the\nother sex",
+    caption = "Colour: complaints for this sex divided by complaints for the other sex.") +
   theme_minimal() +
   theme(panel.grid = element_blank())
 
-ggsave("fig/02_exploration/02_rafa/gender_age/offence_count_sex_level.png",
+ggsave("fig/02_exploration/02_rafa/gender_age/offence_tables_sex_ratio.png",
        width = 16, height = 6, bg = white)

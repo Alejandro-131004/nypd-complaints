@@ -287,3 +287,40 @@ ggplot(mix, aes(x = boro_nm, y = vic_race, fill = ratio)) +
 ggsave("fig/02_exploration/02_rafa/race/victims_full.png")
 
 # ----------- #
+
+# 8. Offence counts by victim race, one image per offence level
+race_off <- nypd |>
+  filter(!is.na(vic_race), !(vic_race %in% c("(null)", "UNKNOWN")),
+         !is.na(ofns_desc), !is.na(law_cat_cd)) |>
+  count(law_cat_cd, ofns_desc, vic_race) |>
+  group_by(law_cat_cd, ofns_desc) |>
+  
+  # total, used for ordering
+  mutate(total = sum(n)) |>
+  group_by(law_cat_cd) |>
+  
+  # top 7 chosen manually (magnitude)
+  filter(dense_rank(desc(total)) <= 7) |>
+  ungroup()
+
+for (level in c("FELONY", "MISDEMEANOR", "VIOLATION")) {
+  
+  p <- ggplot(filter(race_off, law_cat_cd == level),
+              aes(x = vic_race, y = reorder(ofns_desc, total), fill = n)) +
+    geom_tile(colour = white) +
+    geom_text(aes(label = scales::comma(n)), size = 3) +
+    scale_x_discrete(labels = race_short, position = "top") +
+    scale_fill_gradient(low = white, high = dv_blue, labels = scales::comma) +
+    labs(
+      title = paste("Offence Counts by Victim Race:", tools::toTitleCase(tolower(level))),
+      x     = NULL,
+      y     = NULL,
+      fill  = "Complaints") +
+    theme_minimal() +
+    theme(panel.grid = element_blank())
+  
+  print(p)
+  
+  ggsave(paste0("fig/02_exploration/02_rafa/race/offence_counts_race_", tolower(level), ".png"),
+         plot = p, width = 12, height = 5, bg = white)
+}
