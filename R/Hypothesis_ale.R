@@ -1,4 +1,26 @@
-# =====================================================================
+#==================================================================================================================
+# Setup shared by all hypotheses
+#==================================================================================================================
+
+library(dplyr)
+library(ggplot2)
+
+dv_blue <- "#2E75B6"
+orange <- "orange2"
+
+source <- "Data: NYPD Complaint Data, NYC Open Data (complaints reported from January 2020 to June 2026)"
+
+nypd <- readRDS("data/nypd_clean.rds")
+
+# Values that do not represent a real category
+not_valid <- c("", "(null)")
+
+
+#==================================================================================================================
+# Hypothesis nº1
+#==================================================================================================================
+
+# ====================================================================================
 # My first idea was to check if adults in some boroughs use children to commit
 # crimes, for example in drug possession or trafficking. The dataset does not record
 # whether an adult recruited or directed a suspect, so we cannot test this. Instead,
@@ -29,15 +51,8 @@
 # unless I search for external sources that could help the Mayor put police stations
 # that handle problems with young people in those specific boroughs that have a higher
 # share of complaints with underage suspects.
-# =====================================================================
+# ====================================================================================
 
-library(dplyr)
-library(ggplot2)
-
-dv_blue <- "#2E75B6"
-orange <- "orange2"
-
-source <- "Data: NYPD Complaint Data, NYC Open Data (complaints reported from January 2020 to June 2026)"
 fig_dir <- "fig/02_exploration/02_ale/02_youth_complaints"
 dir.create(fig_dir, showWarnings = FALSE, recursive = TRUE)
 
@@ -50,11 +65,6 @@ n_top_precincts <- 15
 
 # Number of offence types compared across boroughs
 n_top_offences <- 6
-
-nypd <- readRDS("data/nypd_clean.rds")
-
-# Values that do not represent a real category
-not_valid <- c("", "(null)")
 
 # Known suspect age groups (UNKNOWN and invalid values are excluded)
 known_ages <- c("<18", "18-24", "25-44", "45-64", "65+")
@@ -246,9 +256,9 @@ offence_plt <- ggplot(offence_boroughs, aes(x = pct_under_18, y = boro_nm)) +
 ggsave(file.path(fig_dir, "top_offences_by_borough.png"), plot = offence_plt, width = 11, height = 8, dpi = 300)
 
 
-#---------------------------------------------------------------------------------------------------------------#
-# Small checks
-#---------------------------------------------------------------------------------------------------------------#
+# ---------------------------------------------------------------- #
+# Small checks for hypothesis nº1
+# ---------------------------------------------------------------- #
 
 # Difference and ratio between each area's share and the citywide share
 compare_to_city <- function(data, city_share) {
@@ -280,3 +290,257 @@ nypd |>
 nypd |>
   filter(grepl(youth_pattern, prem_typ_desc, ignore.case = TRUE)) |>
   count(prem_typ_desc, sort = TRUE)
+
+
+#==================================================================================================================
+# Hypothesis nº2
+#==================================================================================================================
+
+# =================================================================================================================
+# My second idea involved the gender category. They're divided into M (Masculine), 
+# F (Feminine), U (Unknown), D (Business or Organisation), E (The People of the State of New York),
+# so neither D and E are a person. 
+# I also found an interesting one in data_quality_checks.R, which is L, and that stands for complaints that appear
+# to involve police officers as victims.
+# So the initial hypothesis for now is Complaints that appear to involve police officers as victims 
+# are concentrated in certain boroughs and precincts
+# =================================================================================================================
+
+# L only starts in 2022 and never covers all assaults on officers, so the analysis
+# below uses the "ASSAULT POLICE/PEACE OFFICER" description from 2020 to 2025.
+# 2026 is left out because it only runs until June.
+
+police_fig_dir <- "fig/02_exploration/02_ale/02_police_victims"
+dir.create(police_fig_dir, showWarnings = FALSE, recursive = TRUE)
+
+# Minimum assaults for a precinct to appear in the ratio figure
+min_assaults <- 50
+
+# Mark the assaults and group the premises into three simple types
+police <- nypd |>
+  filter(report_year %in% 2020:2025) |>
+  mutate(
+    is_assault = pd_desc %in% "ASSAULT POLICE/PEACE OFFICER",
+    place = case_when(
+      prem_typ_desc %in% "STREET" ~ "Street",
+      is.na(prem_typ_desc) | prem_typ_desc %in% "OTHER" ~ "Other or unknown",
+      TRUE ~ "Other known place"
+    )
+  )
+
+assaults <- police |>
+  filter(is_assault)
+
+
+# ---- Check 1. Is the L code the reason to avoid it? ----
+
+assaults |>
+  count(report_year, is_l = vic_sex %in% "L") |>
+  as_tibble() |>
+  print(n = Inf)
+
+
+# ---- Check 2. Do assaults change differently from all complaints? ----
+
+# Index: 2020 = 100, so both lines can be compared on the same scale
+yearly_totals <- police |>
+  group_by(report_year) |>
+  summarise(complaints = n(), assaults = sum(is_assault)) |>
+  mutate(
+    complaints_index = round(100 * complaints / first(complaints), 1),
+    assaults_index = round(100 * assaults / first(assaults), 1)
+  )
+
+print(yearly_totals)
+
+trend_plt <- ggplot(yearly_totals, aes(x = report_year)) +
+  geom_line(aes(y = complaints_index, colour = "All complaints"), linewidth = 1.2) +
+  geom_line(aes(y = assaults_index, colour = "Assaults on officers"), linewidth = 1.2) +
+  scale_colour_manual(values = c("All complaints" = "grey60", "Assaults on officers" = dv_blue)) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(
+    title = "Assaults on Officers Compared with All Complaints",
+    subtitle = "Index: 2020 = 100",
+    x = "Report Year",
+    y = "Index",
+    colour = NULL,
+    caption = source
+  ) +
+  theme_minimal()
+
+ggsave(file.path(police_fig_dir, "assaults_trend.png"), plot = trend_plt, width = 9, height = 5, dpi = 300)
+
+
+# ---- Check 3. Are assaults concentrated beyond complaints in general? ----
+
+# A ratio above 1 means the area has more assaults than its total complaints would suggest
+add_shares <- function(data) {
+  data |>
+    mutate(
+      pct_assaults = round(100 * assaults / sum(assaults), 2),
+      pct_all = round(100 * complaints / sum(complaints), 2),
+      ratio = round(pct_assaults / pct_all, 2)
+    ) |>
+    arrange(desc(assaults))
+}
+
+boroughs <- police |>
+  filter(!is.na(boro_nm)) |>
+  group_by(boro_nm) |>
+  summarise(complaints = n(), assaults = sum(is_assault)) |>
+  add_shares()
+
+print(boroughs)
+
+precincts <- police |>
+  filter(!is.na(addr_pct_cd)) |>
+  group_by(addr_pct_cd) |>
+  summarise(complaints = n(), assaults = sum(is_assault)) |>
+  add_shares()
+
+print(precincts, n = Inf)
+
+# Share of assaults and share of all complaints in the top 10 precincts
+top10_precincts <- head(precincts, 10)
+sum(top10_precincts$pct_assaults)
+sum(top10_precincts$pct_all)
+
+# Precincts with the highest ratio, among those with enough assaults
+top_ratio <- precincts |>
+  filter(assaults >= min_assaults) |>
+  slice_max(ratio, n = 15)
+
+ratio_plt <- ggplot(top_ratio, aes(x = ratio, y = reorder(addr_pct_cd, ratio))) +
+  geom_col(fill = dv_blue) +
+  geom_vline(xintercept = 1, colour = orange, linewidth = 1, linetype = "dashed") +
+  geom_text(aes(label = paste(assaults, "assaults")), hjust = -0.1, size = 3.2) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.2))) +
+  labs(
+    title = "Precincts Where Assaults on Officers Are Most Over-Represented",
+    subtitle = paste0("Ratio = share of assaults / share of all complaints. Dashed line = 1, the same share of both. At least ",
+                      min_assaults, " assaults"),
+    x = "Ratio",
+    y = "Precinct",
+    caption = source
+  ) +
+  theme_minimal()
+
+ggsave(file.path(police_fig_dir, "assaults_ratio.png"), plot = ratio_plt, width = 10, height = 6, dpi = 300)
+
+
+# ---- Check 4. Do the same precincts stay on top each year? ----
+
+yearly <- assaults |>
+  filter(!is.na(addr_pct_cd)) |>
+  count(report_year, addr_pct_cd)
+
+yearly |>
+  group_by(report_year) |>
+  slice_max(n, n = 10) |>
+  ungroup() |>
+  count(addr_pct_cd, name = "years_in_top10", sort = TRUE) |>
+  print(n = Inf)
+
+yearly_plt <- yearly |>
+  filter(addr_pct_cd %in% top10_precincts$addr_pct_cd) |>
+  ggplot(aes(x = factor(report_year), y = addr_pct_cd, fill = n)) +
+  geom_tile(colour = "white") +
+  geom_text(aes(label = n), colour = "white", size = 3.2) +
+  scale_fill_gradient(low = "#9DC3E6", high = "darkblue") +
+  labs(
+    title = "Assaults on Officers per Year in the Top 10 Precincts",
+    x = "Report Year",
+    y = "Precinct",
+    fill = "Assaults",
+    caption = source
+  ) +
+  theme_minimal()
+
+ggsave(file.path(police_fig_dir, "assaults_by_year.png"), plot = yearly_plt, width = 10, height = 6, dpi = 300)
+
+
+# ---- Check 5. Where do the assaults happen in the precincts that stand out? ----
+
+count(assaults, place, sort = TRUE)
+count(assaults, juris_desc, sort = TRUE) |> head(10)
+
+# Exact premises in the same precincts
+assaults |>
+  filter(addr_pct_cd %in% top_ratio$addr_pct_cd) |>
+  count(addr_pct_cd, prem_typ_desc, sort = TRUE) |>
+  group_by(addr_pct_cd) |>
+  slice_head(n = 3) |>
+  print(n = Inf)
+
+place_plt <- assaults |>
+  filter(addr_pct_cd %in% top_ratio$addr_pct_cd) |>
+  ggplot(aes(y = factor(addr_pct_cd, levels = rev(top_ratio$addr_pct_cd)), fill = place)) +
+  geom_bar(position = "fill") +
+  scale_x_continuous(labels = scales::percent) +
+  scale_fill_manual(values = c("Street" = dv_blue, "Other known place" = orange, "Other or unknown" = "grey70")) +
+  labs(
+    title = "Where Assaults on Officers Happen in the Top Ratio Precincts",
+    subtitle = "Precincts in the same order as the ratio figure",
+    x = "% of the Precinct's Assaults",
+    y = "Precinct",
+    fill = "Place",
+    caption = source
+  ) +
+  theme_minimal()
+
+ggsave(file.path(police_fig_dir, "assaults_place.png"), plot = place_plt, width = 10, height = 6, dpi = 300)
+
+
+# ---- Check 6. Do assaults happen at different hours from complaints in general? ----
+
+# Exact 00:00 and 12:00 are removed because they may stand for an unknown time
+timed <- police |>
+  filter(!old_occurrence, !is.na(hour), !is.na(wday),
+         !cmplnt_fr_tm %in% c("00:00:00", "12:00:00"))
+
+hourly <- timed |>
+  group_by(hour) |>
+  summarise(complaints = n(), assaults = sum(is_assault)) |>
+  mutate(
+    pct_assaults = round(100 * assaults / sum(assaults), 2),
+    pct_all = round(100 * complaints / sum(complaints), 2)
+  )
+
+print(hourly, n = Inf)
+
+hourly_plt <- ggplot(hourly, aes(x = hour)) +
+  geom_line(aes(y = pct_all, colour = "All complaints"), linewidth = 1.2) +
+  geom_line(aes(y = pct_assaults, colour = "Assaults on officers"), linewidth = 1.2) +
+  scale_colour_manual(values = c("All complaints" = "grey60", "Assaults on officers" = dv_blue)) +
+  scale_x_continuous(breaks = 0:23) +
+  scale_y_continuous(limits = c(0, NA), labels = scales::label_percent(scale = 1)) +
+  labs(
+    title = "Hour of Assaults on Officers Compared with All Complaints",
+    subtitle = "Complaints recorded at exactly 00:00 or 12:00 are excluded",
+    x = "Hour of Occurrence",
+    y = "% of Complaints in Each Group",
+    colour = NULL,
+    caption = source
+  ) +
+  theme_minimal()
+
+ggsave(file.path(police_fig_dir, "assaults_by_hour.png"), plot = hourly_plt, width = 10, height = 5, dpi = 300)
+
+time_plt <- timed |>
+  filter(is_assault) |>
+  count(wday, hour) |>
+  ggplot(aes(x = hour, y = wday, fill = n)) +
+  geom_tile(colour = "white") +
+  scale_fill_gradient(low = "#DCE6F0", high = "darkblue") +
+  scale_x_continuous(breaks = 0:23) +
+  labs(
+    title = "Assaults on Officers by Hour and Day of the Week",
+    subtitle = "Complaints recorded at exactly 00:00 or 12:00 are excluded",
+    x = "Hour of Occurrence",
+    y = "Day of the Week",
+    fill = "Assaults",
+    caption = source
+  ) +
+  theme_minimal()
+
+ggsave(file.path(police_fig_dir, "assaults_hour_weekday.png"), plot = time_plt, width = 10, height = 5, dpi = 300)
