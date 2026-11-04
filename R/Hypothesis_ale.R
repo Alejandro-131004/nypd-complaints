@@ -1,8 +1,8 @@
 # =====================================================================
-# Our first idea was to check if adults in some boroughs use children to commit
+# My first idea was to check if adults in some boroughs use children to commit
 # crimes, for example in drug possession or trafficking. The dataset does not record
 # whether an adult recruited or directed a suspect, so we cannot test this. Instead,
-# we looked at the share of drug complaints with a suspect recorded as under 18 in
+# I looked at the share of drug complaints with a suspect recorded as under 18 in
 # each borough and precinct.
 #
 # This did not give us enough cases. Only 481 of the 73,125 drug complaints with a
@@ -10,19 +10,25 @@
 # cases, so we should be careful with their differences, and the precinct ranking is
 # not reliable. Precinct 111, for example, ranks second with just 1 case out of 53.
 #
-# Since there are so few drug cases, our next idea is to repeat the analysis with
-# all crimes. We now want to see if the share of complaints with a suspect recorded
-# as under 18 changes between boroughs and precincts. This makes the question broader,
-# as we are no longer looking only at drug offences.
+# Since there are so few drug cases, my next idea is to repeat the analysis with
+# all crimes. I want to see if the share of complaints with a suspect recorded
+# as under 18 changes between boroughs and precincts.
 #
 # We need to be careful when reading these results. A borough may have a higher share
-# just because it has more of certain types of crime, so we also want to compare the
+# just because it has more of certain types of crime, so I also want to compare the
 # most common offences separately. Suspect age may also be unknown more often across
-# all crimes, so we should check how many ages are missing before comparing areas.
+# all crimes, so I should check how many ages are missing before comparing areas.
 #
 # These numbers only tell us about reported complaints. They do not show that adults
 # directed these suspects, and some of the differences may come from the way police
 # work or record cases in each area.
+
+# The problem is that there are no police stations for young people (underage),
+# so the solution for the Mayor or the NYPD would essentially be the same
+# as for people aged 18 or over. I think it's better to change hypothesis,
+# unless I search for external sources that could help the Mayor put police stations
+# that handle problems with young people in those specific boroughs that have a higher
+# share of complaints with underage suspects.
 # =====================================================================
 
 library(dplyr)
@@ -32,7 +38,7 @@ dv_blue <- "#2E75B6"
 orange <- "orange2"
 
 source <- "Data: NYPD Complaint Data, NYC Open Data (complaints reported from January 2020 to June 2026)"
-fig_dir <- "fig/02_youth_complaints"
+fig_dir <- "fig/02_exploration/02_ale/02_youth_complaints"
 dir.create(fig_dir, showWarnings = FALSE, recursive = TRUE)
 
 # Minimum complaints with a known suspect age for a precinct to be ranked
@@ -126,7 +132,7 @@ plot_share <- function(data, group_var, title, subtitle, y_title, city_share = N
   plt +
     geom_text(aes(label = paste0(scales::comma(under_18), " of ", scales::comma(known_age))),
               hjust = -0.1, size = 3.2) +
-    scale_x_continuous(expand = expansion(mult = c(0, 0.25))) +
+    scale_x_continuous(labels = scales::label_percent(scale = 1), expand = expansion(mult = c(0, 0.25))) +
     labs(title = title, subtitle = subtitle, x = "% of Suspects Recorded as Under 18",
          y = y_title, caption = source) +
     theme_minimal()
@@ -134,7 +140,7 @@ plot_share <- function(data, group_var, title, subtitle, y_title, city_share = N
 
 # Subtitle text explaining the dashed line
 city_note <- function(city_share) {
-  paste0("Suspects with a known age only. Dashed line = city average (", city_share, "%)")
+  paste0("Suspects with a known age only. Dashed line = % of suspects under 18 in all of New York City (", city_share, "%)")
 }
 
 
@@ -227,7 +233,7 @@ offence_plt <- ggplot(offence_boroughs, aes(x = pct_under_18, y = boro_nm)) +
   geom_text(aes(label = paste0(scales::comma(under_18), " of ", scales::comma(known_age))),
             hjust = -0.1, size = 2.8) +
   facet_wrap(~ ofns_desc, ncol = 2, labeller = label_wrap_gen(40)) +
-  scale_x_continuous(expand = expansion(mult = c(0, 0.45))) +
+  scale_x_continuous(labels = scales::label_percent(scale = 1), expand = expansion(mult = c(0, 0.45))) +
   labs(
     title = "Complaints with a Suspect Under 18, by Borough and Offence",
     subtitle = paste0("The ", n_top_offences, " most common offences. Suspects with a known age only"),
@@ -238,3 +244,39 @@ offence_plt <- ggplot(offence_boroughs, aes(x = pct_under_18, y = boro_nm)) +
   theme_minimal()
 
 ggsave(file.path(fig_dir, "top_offences_by_borough.png"), plot = offence_plt, width = 11, height = 8, dpi = 300)
+
+
+#---------------------------------------------------------------------------------------------------------------#
+# Small checks
+#---------------------------------------------------------------------------------------------------------------#
+
+# Difference and ratio between each area's share and the citywide share
+compare_to_city <- function(data, city_share) {
+  data |>
+    mutate(
+      diff_vs_city = round(pct_under_18 - city_share, 2),
+      ratio_vs_city = round(pct_under_18 / city_share, 2)
+    )
+}
+
+print(compare_to_city(all_boroughs, all_city$pct_under_18))
+print(compare_to_city(all_precincts, all_city$pct_under_18), n = Inf, width = Inf)
+
+# Text to search for in the columns below
+youth_pattern <- "YOUTH|JUVENILE|SCHOOL|EDUCATION"
+
+# All agencies with jurisdiction
+nypd |>
+  count(juris_desc, sort = TRUE) |>
+  as_tibble() |>
+  print(n = Inf)
+
+# Agencies whose name matches the search
+nypd |>
+  filter(grepl(youth_pattern, juris_desc, ignore.case = TRUE)) |>
+  count(juris_desc, sort = TRUE)
+
+# Premise types whose name matches the search
+nypd |>
+  filter(grepl(youth_pattern, prem_typ_desc, ignore.case = TRUE)) |>
+  count(prem_typ_desc, sort = TRUE)
