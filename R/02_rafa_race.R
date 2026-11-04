@@ -57,7 +57,7 @@ ggplot(boro, aes(x = boro_nm, fill = law_cat_cd)) +
   theme_minimal() + 
   scale_fill_brewer(palette = "Reds", direction = -1)
 
-ggsave("fig/02_exploration/02_rafa/severity_count_borough.png")
+ggsave("fig/02_exploration/02_rafa/race/severity_count_borough.png")
 
 
 # Let's see if the trend of misdemeanor-felony-violation is also present in races
@@ -77,7 +77,7 @@ ggplot(vic, aes(x = vic_race, fill = law_cat_cd)) +
   theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
   scale_fill_brewer(palette = "Reds", direction = -1)
 
-ggsave("fig/02_exploration/02_rafa/severity_count_victim.png")
+ggsave("fig/02_exploration/02_rafa/race/severity_count_victim.png")
 
 
 # In both cases, we can identify clear magnitude issues. Let's try a 
@@ -101,7 +101,7 @@ ggplot(boro, aes(x = boro_nm, fill = law_cat_cd)) +
   theme_minimal() + 
   scale_fill_brewer(palette = "Reds", direction = -1)
 
-ggsave("fig/02_exploration/02_rafa/severity_percent_borough.png")
+ggsave("fig/02_exploration/02_rafa/race/severity_percent_borough.png")
 
 
 # 4. Crime severity per victim race accounting for population size
@@ -123,43 +123,114 @@ ggplot(vic, aes(x = vic_race, fill = law_cat_cd)) +
   theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
   scale_fill_brewer(palette = "Reds", direction = -1)
 
-ggsave("fig/02_exploration/02_rafa/severity_percent_victim.png")
+ggsave("fig/02_exploration/02_rafa/race/severity_percent_victim.png")
 
 
 # This tells us that the relationship between severity is stable
 # across boroughs and race. Let's look at racial density per borough
 
 
-# Top3 for readability, rest grayed out
+# 5. Victim race share per borough (top 3 races, rest grouped as OTHER)
 boro_race <- subset(nypd, !is.na(boro_nm) &
-        !is.na(vic_race) & !(vic_race %in% c("(null)", "UNKNOWN")))
+                      !is.na(vic_race) & !(vic_race %in% c("(null)", "UNKNOWN")))
+
 top3 <- names(sort(table(boro_race$vic_race), decreasing = TRUE))[1:3]
-boro_race$vic_race_top <- ifelse(boro_race$vic_race %in% top3, 
+boro_race$vic_race_top <- ifelse(boro_race$vic_race %in% top3,
                                  boro_race$vic_race, "OTHER")
 boro_race$vic_race_top <- factor(boro_race$vic_race_top, levels = c(top3, "OTHER"))
+
+# n per borough, counted on THIS subset (complaints with a known victim race)
+n_boro_race      <- table(boro_race$boro_nm)
+boro_race_labels <- paste0(names(n_boro_race), "\n(n = ",
+                           scales::comma(as.numeric(n_boro_race)), ")")
+names(boro_race_labels) <- names(n_boro_race)
 
 ggplot(boro_race, aes(x = boro_nm, fill = vic_race_top)) +
   geom_bar(aes(y = after_stat(count / ave(count, x, FUN = sum))),
            position = "dodge") +
   scale_y_continuous(labels = scales::percent) +
-  scale_x_discrete(labels = boro_labels) +
+  scale_x_discrete(labels = boro_race_labels) +
   labs(
-    title   = "Victim Race by Borough (Top 3)",
+    title   = "Victim Race by Borough (Top 3, rest grouped as Other)",
     x       = "Borough",
-    y       = "Percentage of Borough's Complaints",
-    fill    = "Victim Race (as recorded by police)") +
-  theme_minimal() + 
+    y       = "Share of the Borough's Complaints",
+    fill    = "Victim Race (as recorded by police)",
+    caption = "Complaints with unknown victim race excluded.") +
+  theme_minimal() +
   scale_fill_manual(values = c("BLACK"          = orange,
                                "WHITE"          = gold,
                                "WHITE HISPANIC" = dark_blue,
                                "OTHER"          = grey))
 
-ggsave("fig/02_exploration/02_rafa/race_percent_borough.png")
+ggsave("fig/02_exploration/02_rafa/race/race_percent_borough.png",
+       width = 10, height = 6, dpi = 300, bg = white)
 
 
 # An interesting takeaway is that crime severity percentages are consistent 
 # throughout both race and boroughs, despite race distribution per borough
 # being completely different for each case
+
+# Globally, there is no clear race or borough vulnerability to crime severity
+# However, results above indicate that racial density between boroughs is
+# highly heterogeneous. 
+
+# This means that there might be certain races accounting for large portions
+# of different crime severities in certain boroughs. In other words, the ratio
+# of felony victims in a specific borough, for example, can be compliant to 
+# average levels of global ny felony victims, but intra-borough it might be strongly
+# associated to a victim of a certain race, which would expose race vulnerability
+# in boroughs.
+
+# 7. Which race is most over-represented in each severity, per borough,
+#    and by how much compared with all other races in the same borough
+tab <- table(boro_race$boro_nm, boro_race$vic_race, boro_race$law_cat_cd)  # borough x race x severity
+
+n_BR <- apply(tab, c(1, 2), sum)   # complaints per borough x race
+n_BS <- apply(tab, c(1, 3), sum)   # complaints per borough x severity
+n_B  <- apply(tab, 1, sum)         # complaints per borough
+
+sev_vs <- as.data.frame(as.table(tab))
+names(sev_vs) <- c("boro_nm", "vic_race", "law_cat_cd", "n")
+b <- as.character(sev_vs$boro_nm)
+r <- as.character(sev_vs$vic_race)
+s <- as.character(sev_vs$law_cat_cd)
+
+sev_vs$group_n      <- n_BR[cbind(b, r)]
+sev_vs$share_race   <- sev_vs$n / sev_vs$group_n                                  # this race
+sev_vs$share_others <- (n_BS[cbind(b, s)] - sev_vs$n) / (n_B[b] - sev_vs$group_n)  # all other races
+sev_vs$ratio        <- sev_vs$share_race / sev_vs$share_others
+
+# Drop small groups, then flag the highest ratio per borough x severity
+sev_vs <- subset(sev_vs, group_n >= 1000)
+sev_vs$is_top <- sev_vs$ratio == ave(sev_vs$ratio, sev_vs$boro_nm, sev_vs$law_cat_cd, FUN = max)
+
+boro_short <- c("BRONX" = "Bronx", "BROOKLYN" = "Brooklyn", "MANHATTAN" = "Manhattan",
+                "QUEENS" = "Queens", "STATEN ISLAND" = "Staten Is.")
+
+ggplot(sev_vs, aes(x = boro_nm, y = vic_race, fill = ratio)) +
+  geom_tile(colour = white) +
+  geom_tile(data = subset(sev_vs, is_top), fill = NA, colour = "black", linewidth = 0.8) +
+  geom_text(aes(label = sprintf("%.2f", ratio)), size = 3) +
+  facet_wrap(~ law_cat_cd, nrow = 1) +
+  scale_x_discrete(labels = boro_short) +
+  scale_y_discrete(labels = race_short) +
+  scale_fill_gradient2(low = dv_blue, mid = white, high = "firebrick",
+                       midpoint = 1, limits = c(0.5, 1.5), oob = scales::squish) +
+  labs(
+    title   = "Over-Representation by Crime Severity: Each Race vs All Other Races in the Borough",
+    x       = NULL,
+    y       = "Victim Race (as recorded by police)",
+    fill    = "Ratio to other\nraces in borough",
+    caption = "1.25 = this severity is a 25% larger share of the race's complaints than of other races' complaints in the borough.\nBlack outline: highest ratio in that borough and severity. Groups with fewer than 1,000 complaints excluded.") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.grid  = element_blank())
+
+ggsave("fig/02_exploration/02_rafa/race/severity_ratio_race_vs_others_borough.png",
+       width = 13, height = 6, dpi = 300, bg = white)
+
+
+# ------------- #
 
 
 # Data: one row per complaint with a known borough, victim race and offence
@@ -213,4 +284,6 @@ ggplot(mix, aes(x = boro_nm, y = vic_race, fill = ratio)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         panel.grid  = element_blank())
-ggsave("fig/02_exploration/02_rafa/victims_full.png")
+ggsave("fig/02_exploration/02_rafa/race/victims_full.png")
+
+# ----------- #
