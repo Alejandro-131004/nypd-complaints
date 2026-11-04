@@ -7,6 +7,8 @@
 library(dplyr)
 library(ggplot2)
 
+dir.create("fig/02_exploration/02_matilde", showWarnings = FALSE, recursive = TRUE)
+
 # Load clean data
 nypd <- readRDS("data/nypd_clean.rds")
 nypd_ocorr <- nypd |> filter(!old_occurrence)
