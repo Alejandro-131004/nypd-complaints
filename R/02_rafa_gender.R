@@ -271,8 +271,8 @@ ggsave("fig/02_exploration/02_rafa/gender_age/offence_tables_sex_ratio.png",
        width = 16, height = 6, bg = white)
 
 
-# 8. Let's look at the difference in incidence of crime, for each level
-# in the top 10 most reported premises 
+# 8. Let's look at the difference in incidence of crime, 
+# for each level in the top 10 most reported premises 
 sex_prem <- nypd |>
   filter(vic_sex %in% c("M", "F"), !is.na(law_cat_cd),
          !is.na(prem_typ_desc), prem_typ_desc != "(null)") |>
@@ -306,5 +306,6 @@ ggplot(sex_prem, aes(x = vic_sex, y = reorder(prem_typ_desc, prem_total), fill =
   theme_minimal() +
   theme(panel.grid = element_blank())
 
-ggsave("fig/02_exploration/02_rafa/gender_age/severity_sex_premises.png")
+ggsave("fig/02_exploration/02_rafa/gender_age/severity_sex_premises.png",
+       width = 16, height = 6, bg = white)
 
