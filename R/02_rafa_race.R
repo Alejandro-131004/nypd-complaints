@@ -324,3 +324,4 @@ for (level in c("FELONY", "MISDEMEANOR", "VIOLATION")) {
   ggsave(paste0("fig/02_exploration/02_rafa/race/offence_counts_race_", tolower(level), ".png"),
          plot = p, width = 12, height = 5, bg = white)
 }
+

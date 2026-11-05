@@ -13,6 +13,7 @@ grey <- "grey85"
 white <- "white"
 pink <- "violet"
 black <- "black"
+red <- "firebrick"
 
 
 # Loading dataset and removing old occurrences
@@ -119,6 +120,10 @@ ggplot(vic_sex, aes(x = vic_sex, fill = law_cat_cd)) +
 ggsave("fig/02_exploration/02_rafa/gender_age/severity_percent_victim_sex.png")
 
 
+# --------------------------------------------------------------- #
+   # ------------------- Initial Ideas ----------------------- #
+# --------------------------------------------------------------- #
+
 # This tells us that the relationship between severity is stable
 # across boroughs, but with non-insignificant differences in both
 # percentage and count between sex, especially in the felonies and violations
@@ -219,13 +224,18 @@ ggplot(sex_in_sev, aes(x = law_cat_cd, y = share, fill = vic_sex)) +
 
 ggsave("fig/02_exploration/02_rafa/gender_age/sex_percent_severity_borough.png", bg = white)
 
+# --------------------------------------------------------------- #
+   # --------------- Complex Relationships ------------------- #
+# --------------------------------------------------------------- #
+
+
 # Across the board, even though there are always at least as many women as men:
 #  1. in every borough, the more serious the offense, the higher 
 #     the likelihood that the victim is a man
 #  2. in every borough, men are more likely to be victims of misdemeanors 
 #     and felonies (with the small exception of Bronx Misdemeanors)
 
-
+# 7. Finer detail analysis: actual crimes' counts and ratios 
 sex_off <- nypd |>
   filter(vic_sex %in% c("M", "F"), !is.na(ofns_desc), !is.na(law_cat_cd)) |>
   count(law_cat_cd, ofns_desc, vic_sex) |>
@@ -236,7 +246,7 @@ sex_off <- nypd |>
          ratio = n / (total - n)) |>
   group_by(law_cat_cd) |>
   
-  # top 7 chosen manually (magnitude)
+  # top 7 chosen manually (most significant)
   filter(dense_rank(desc(total)) <= 7) |>
   ungroup()
 
@@ -245,18 +255,56 @@ ggplot(sex_off, aes(x = vic_sex, y = reorder(ofns_desc, total), fill = log2(rati
   geom_text(aes(label = paste0(scales::comma(n), "\n(", round(ratio, 1), "×)")), size = 3) +
   facet_wrap(~ law_cat_cd, scales = "free_y", ncol = 3) +
   scale_x_discrete(labels = c("F" = "Female", "M" = "Male"), position = "top") +
-  scale_fill_gradient2(low = dv_blue, mid = white, high = "firebrick", midpoint = 0,
+  scale_fill_gradient2(low = dv_blue, mid = white, high = red, midpoint = 0,
                        limits = c(-2, 2), oob = scales::squish,
                        breaks = c(-2, -1, 0, 1, 2),
-                       labels = c("¼×", "½×", "1×", "2×", "4×")) +
+                       labels = c("(0.25x", "0.5x", "1x", "2x", "4x")) +
   labs(
     title   = "Offence Counts by Victim Sex, per Offence Level",
     x       = NULL,
     y       = NULL,
-    fill    = "Times the\nother sex",
-    caption = "Colour: complaints for this sex divided by complaints for the other sex.") +
+    fill    = "Times the\nother sex") +
   theme_minimal() +
   theme(panel.grid = element_blank())
 
 ggsave("fig/02_exploration/02_rafa/gender_age/offence_tables_sex_ratio.png",
        width = 16, height = 6, bg = white)
+
+
+# 8. Let's look at the difference in incidence of crime, for each level
+# in the top 10 most reported premises 
+sex_prem <- nypd |>
+  filter(vic_sex %in% c("M", "F"), !is.na(law_cat_cd),
+         !is.na(prem_typ_desc), prem_typ_desc != "(null)") |>
+  count(law_cat_cd, prem_typ_desc, vic_sex) |>
+  
+  # top 10 premises overall (same rows in every panel)
+  group_by(prem_typ_desc) |>
+  mutate(prem_total = sum(n)) |>
+  ungroup() |>
+  filter(dense_rank(desc(prem_total)) <= 10) |>
+  
+  # ratio = this sex's count / other sex's count, per premises x severity
+  group_by(law_cat_cd, prem_typ_desc) |>
+  mutate(ratio = n / (sum(n) - n)) |>
+  ungroup()
+
+ggplot(sex_prem, aes(x = vic_sex, y = reorder(prem_typ_desc, prem_total), fill = log2(ratio))) +
+  geom_tile(colour = white) +
+  geom_text(aes(label = paste0(scales::comma(n), "\n(", round(ratio, 1), "×)")), size = 3) +
+  facet_wrap(~ law_cat_cd, ncol = 3) +
+  scale_x_discrete(labels = c("F" = "Female", "M" = "Male"), position = "top") +
+  scale_fill_gradient2(low = dv_blue, mid = white, high = red, midpoint = 0,
+                       limits = c(-2, 2), oob = scales::squish,
+                       breaks = c(-2, -1, 0, 1, 2),
+                       labels = c("0.25x", "0.5x", "1x", "2x", "4x")) +
+  labs(
+    title   = "Crime Severity by Victim Sex and Premises",
+    x       = NULL,
+    y       = NULL,
+    fill    = "Times the\nother sex") +
+  theme_minimal() +
+  theme(panel.grid = element_blank())
+
+ggsave("fig/02_exploration/02_rafa/gender_age/severity_sex_premises.png")
+
