@@ -27,6 +27,13 @@ nypd_ocorr <- nypd |> filter(!old_occurrence)
 dv_blue <- "#2E75B6"
 source_caption <- "Data: NYPD Complaint Data, NYC Open Data (2020-2026)"
 
+# colorblind-friendly palette
+tactical_colors <- c(
+  "FELONY"      = "#D55E00", 
+  "MISDEMEANOR" = "#0072B2", 
+  "VIOLATION"   = "#009E73" 
+)
+
 # ---------------------------------------------------------------------
 # 1: Summary of most frequent crimes by severity category
 # ---------------------------------------------------------------------
@@ -50,6 +57,7 @@ g_matilde_1 <- ggplot(tactical_crimes, aes(x = reorder(ofns_desc, n), y = n, fil
     fill = "Law Category",
     caption = source_caption
   ) +
+  scale_fill_manual(values = tactical_colors) +
   theme_minimal()
 ggsave("fig/02_exploration/02_matilde/top_tactical_crimes.png", plot = g_matilde_1, width = 10, height = 6, dpi = 300)
 
@@ -74,6 +82,7 @@ g_matilde_2 <- ggplot(spatial_severity, aes(x = reorder(boro_nm, n), y = n, fill
     fill = "Law Category",
     caption = source_caption
   ) +
+  scale_fill_manual(values = tactical_colors) +
   theme_minimal()
 
 print(g_matilde_2)
@@ -98,6 +107,7 @@ g_matilde_3 <- ggplot(hourly_crime, aes(x = hour, y = n, color = law_cat_cd)) +
     color = "Law Category",
     caption = source_caption
   ) +
+  scale_color_manual(values = tactical_colors) +
   theme_minimal() +
   scale_x_continuous(breaks = 0:23)
 
