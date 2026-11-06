@@ -53,3 +53,4 @@ table(nypd_clean$susp_age_group, useNA = "ifany")
 # 4. Save
 dir.create("data", showWarnings = FALSE)
 saveRDS(nypd_clean, "data/nypd_clean.rds")
+

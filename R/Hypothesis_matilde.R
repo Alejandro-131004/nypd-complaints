@@ -10,7 +10,7 @@ library(ggplot2)
 dir.create("fig/02_exploration/02_matilde", showWarnings = FALSE, recursive = TRUE)
 
 # Load clean data
-nypd <- readRDS("data/nypd_2020_2026.rds")
+nypd <- readRDS("data/nypd_clean.rds")
 nypd_ocorr <- nypd |> filter(!old_occurrence)
 
 # ---------------------------------------------------------------------
@@ -25,7 +25,7 @@ nypd_ocorr <- nypd |> filter(!old_occurrence)
 
 # Plot styling options
 dv_blue <- "#2E75B6"
-source_caption <- "Data: NYPD Complaint Data, NYC Open Data (2020-2026)"
+source_caption <- "Data: NYPD Complaint Data, NYC Open Data (complaints reported from January 2020 to June 2026)"
 
 # colorblind-friendly palette
 tactical_colors <- c(
