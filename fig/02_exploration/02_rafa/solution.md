@@ -1,7 +1,17 @@
+# Hypothesis Conclusion
+
+Spikes in underage victims at around
 
 
+# Public Transportation Crimes
 
-# What if the parents or housemates (siblings, etc.) are the suspects?
+# Unsupervised/Alone Time at Residence After Classes
+
+## Extracurricular Activities
+
+My first 
+
+## "What if the parents or housemates (siblings, etc.) are the culprits?"
 
 Unfortunately common, and we have no information on that on our dataset, so I would propose:
 

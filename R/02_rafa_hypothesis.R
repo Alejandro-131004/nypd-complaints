@@ -5,6 +5,7 @@ library(ggplot2)
 
 dv_blue <- "#2E75B6"
 orange <- "orange2"
+dark_orange <- "darkorange3"
 gold <- "gold"
 light_blue <- "lightblue"
 dark_blue <- "darkblue"
@@ -21,6 +22,12 @@ nypd <- readRDS("data/nypd_2020_2026.rds")
 nypd <- subset(nypd, report_year >= 2020 & report_year <= 2025)
 nypd <- as.data.frame(nypd)
 nypd <- nypd |> filter(!old_occurrence)
+
+# --------------------------------------------------------------- #
+  # ----------------------- Disclaimers ----------------------- #
+# --------------------------------------------------------------- #
+
+# If year interval is not specified, consider 2020-2025
 
 # --------------------------------------------------------------- #
  # ----------------------- Future Work ------------------------ #
@@ -58,16 +65,18 @@ young$minor    <- young$vic_age_group == "<18"
 young$day_type <- ifelse(format(young$occurred_on, "%u") %in% c("6", "7"), "Weekend", "Weekday")
 young$month    <- format(young$occurred_on, "%m")
 
-# Which premises are in each setting: residences
-premises_res <- young |>
-  filter(setting == "Residence") |>
-  count(prem_typ_desc)
+# All victims vs underage victims per premises: residences
+premises_res <- bind_rows(
+  young |> filter(setting == "Residence") |> count(prem_typ_desc) |> mutate(group = "All victims"),
+  young |> filter(minor, setting == "Residence") |> count(prem_typ_desc) |> mutate(group = "Underage victims")
+)
 
-premises_res_plt <- ggplot(premises_res, aes(x = n, y = reorder(prem_typ_desc, n))) +
-  geom_col(fill = dark_blue) +
+premises_res_plt <- ggplot(premises_res, aes(x = n, y = reorder(prem_typ_desc, n), fill = group)) +
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = c("All victims" = grey, "Underage victims" = dark_blue)) +
   scale_x_continuous(labels = scales::comma, limits = c(0, NA)) +
-  labs(title = "Underage Victims in Residences (2020-2025)",
-       x = "Number of complaints", y = NULL) +
+  labs(title = "All and Underage Victims in Residences (2020-2025)",
+       x = "Number of complaints", y = NULL, fill = NULL) +
   theme_minimal()
 
 premises_res_plt
@@ -75,16 +84,18 @@ premises_res_plt
 ggsave("fig/02_exploration/02_rafa/hypothesis/underage_victims_residence.png",
        plot = premises_res_plt, width = 9, height = 4, bg = white)
 
-# Which premises are in each setting: public transport
-premises_tr <- young |>
-  filter(setting == "Public transport") |>
-  count(prem_typ_desc)
+# All victims vs underage victims per premises: public transport
+premises_tr <- bind_rows(
+  young |> filter(setting == "Public transport") |> count(prem_typ_desc) |> mutate(group = "All victims"),
+  young |> filter(minor, setting == "Public transport") |> count(prem_typ_desc) |> mutate(group = "Underage victims")
+)
 
-premises_tr_plt <- ggplot(premises_tr, aes(x = n, y = reorder(prem_typ_desc, n))) +
-  geom_col(fill = orange) +
+premises_tr_plt <- ggplot(premises_tr, aes(x = n, y = reorder(prem_typ_desc, n), fill = group)) +
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = c("All victims" = grey, "Underage victims" = orange)) +
   scale_x_continuous(labels = scales::comma, limits = c(0, NA)) +
-  labs(title = "Underage Victims in Public Transportation (2020-2025)",
-       x = "Number of complaints", y = NULL) +
+  labs(title = "All and Underage Victims in Public Transportation (2020-2025)",
+       x = "Number of complaints", y = NULL, fill = NULL) +
   theme_minimal()
 
 premises_tr_plt
@@ -103,9 +114,9 @@ all_valid <- nypd |>
   filter(vic_age_group %in% valid_ages)
 
 minor_setting <- bind_rows(minor_setting,
-                           data.frame(setting = "All premises",
-                                      percentage = mean(all_valid$vic_age_group == "<18"),
-                                      total = nrow(all_valid)))
+                 data.frame(setting = "All premises",
+                 percentage = mean(all_valid$vic_age_group == "<18"),
+                 total = nrow(all_valid)))
 
 minor_setting$label <- paste0(minor_setting$setting, "\n(n = ", scales::comma(minor_setting$total), ")")
 
@@ -116,8 +127,8 @@ minor_setting_plt <- ggplot(minor_setting, aes(x = reorder(label, -percentage), 
                                "All premises" = grey),
                     guide = "none") +
   scale_y_continuous(labels = scales::percent, limits = c(0, NA)) +
-  labs(title = "Percentage of Victims under 18, by Setting (2020-2025)",
-       x = NULL, y = "Percentage of victims under 18") +
+  labs(title = "Percentage of Underage Victims (2020-2025)",
+       x = NULL, y = "Percentage of Underage Victims") +
   theme_minimal()
 
 minor_setting_plt
@@ -140,7 +151,7 @@ ggsave("fig/02_exploration/02_rafa/hypothesis/underage_victims_percentage_global
 # This brings us back to the hours and weekdays rationale that indicates
 # lack of supervision might be a strong cause for the spike 
 
-# 2. Victims under 18 on weekdays, by hour: residences (counts)
+# 2. Underage victims on weekdays, by hour: residences (counts)
 minor_counts_res <- young |>
   filter(minor, day_type == "Weekday", setting == "Residence") |>
   count(hour)
@@ -150,7 +161,7 @@ minor_counts_res_plt <- ggplot(minor_counts_res, aes(x = hour, y = n)) +
   geom_point(size = 2, colour = dark_blue) +
   scale_x_continuous(breaks = 0:23) +
   scale_y_continuous(labels = scales::comma, limits = c(0, NA)) +
-  labs(title = "Victims under 18 in Residences on Weekdays, by Hour (2020-2025)",
+  labs(title = "Hourly Underage Victim Counts on Weekdays, in Residences",
        x = "Hour of occurrence", y = "Number of complaints") +
   theme_minimal()
 
@@ -161,7 +172,7 @@ ggsave("fig/02_exploration/02_rafa/hypothesis/weekday_hour_residence.png",
 
 
 
-# 2.1 Victims under 18 on weekdays, by hour: public transport (counts)
+# 2.1 Underage victims on weekdays, by hour: public transport (counts)
 minor_counts_tr <- young |>
   filter(minor, day_type == "Weekday", setting == "Public transport") |>
   count(hour)
@@ -171,7 +182,7 @@ minor_counts_tr_plt <- ggplot(minor_counts_tr, aes(x = hour, y = n)) +
   geom_point(size = 2, colour = orange) +
   scale_x_continuous(breaks = 0:23) +
   scale_y_continuous(labels = scales::comma, limits = c(0, NA)) +
-  labs(title = "Victims under 18 in Public Transport on Weekdays, by Hour (2020-2025)",
+  labs(title = "Hourly Underage Victim Counts on Weekdays, in Public Transportation",
        x = "Hour of occurrence", y = "Number of complaints") +
   theme_minimal()
 
@@ -206,8 +217,8 @@ minor_pct_day_res_plt <- ggplot(minor_pct_day_res, aes(x = hour, y = percentage,
   scale_colour_manual(values = c("Weekday" = dark_blue, "Weekend" = dv_blue)) +
   scale_x_continuous(breaks = 0:23) +
   scale_y_continuous(labels = scales::percent, limits = c(0, NA)) +
-  labs(title = "Percentage of Victims under 18 in Residences, by Hour: Weekday vs Weekend (2020-2025)",
-       x = "Hour of occurrence", y = "Percentage of victims under 18", colour = NULL) +
+  labs(title = "Hourly Underage Victim Percentage (Residence, Weekday vs Weekend)",
+       x = "Hour of occurrence", y = "Percentage of Underage Victims", colour = NULL) +
   theme_minimal()
 
 minor_pct_day_res_plt
@@ -228,8 +239,8 @@ minor_pct_day_tr_plt <- ggplot(minor_pct_day_tr, aes(x = hour, y = percentage, c
   scale_colour_manual(values = c("Weekday" = orange, "Weekend" = gold)) +
   scale_x_continuous(breaks = 0:23) +
   scale_y_continuous(labels = scales::percent, limits = c(0, NA)) +
-  labs(title = "Percentage of Victims under 18 in Public Transport, by Hour: Weekday vs Weekend (2020-2025)",
-       x = "Hour of occurrence", y = "Percentage of victims under 18", colour = NULL) +
+  labs(title = "Hourly Underage Victim Percentage (Public Transportation, Weekday vs Weekend)",
+       x = "Hour of occurrence", y = "Percentage of Underage Victims", colour = NULL) +
   theme_minimal()
 
 minor_pct_day_tr_plt
@@ -262,8 +273,8 @@ minor_pct_season_res_plt <- ggplot(minor_pct_season_res, aes(x = hour, y = perce
   scale_colour_manual(values = c("School months" = dark_blue, "Summer (Jul-Aug)" = dv_blue)) +
   scale_x_continuous(breaks = 0:23) +
   scale_y_continuous(labels = scales::percent, limits = c(0, NA)) +
-  labs(title = "Percentage of Victims under 18 in Residences on Weekdays: School Months vs Summer (2020-2025)",
-       x = "Hour of occurrence", y = "Percentage of victims under 18", colour = NULL) +
+  labs(title = "Weekday Percentage of Underage Victims (Residence, School Months vs Summer)",
+       x = "Hour of occurrence", y = "Percentage of Underage Victims", colour = NULL) +
   theme_minimal()
 
 minor_pct_season_res_plt
@@ -284,8 +295,9 @@ minor_pct_season_tr_plt <- ggplot(minor_pct_season_tr, aes(x = hour, y = percent
   scale_colour_manual(values = c("School months" = orange, "Summer (Jul-Aug)" = gold)) +
   scale_x_continuous(breaks = 0:23) +
   scale_y_continuous(labels = scales::percent, limits = c(0, NA)) +
-  labs(title = "Percentage of Victims under 18 in Public Transport on Weekdays: School Months vs Summer (2020-2025)",
-       x = "Hour of occurrence", y = "Percentage of victims under 18", colour = NULL) +
+  labs(title = "Weekday Percentage of Underage Victims 
+       (Public Transportation, School Months vs Summer)",
+       x = "Hour of occurrence", y = "Percentage of Underage Victims", colour = NULL) +
   theme_minimal()
 
 minor_pct_season_tr_plt
@@ -320,7 +332,7 @@ minor_sev_plt <- ggplot(minor_sev, aes(x = law_cat_cd, y = percentage, fill = se
   scale_fill_manual(values = c("Residence" = dark_blue, "Public transport" = orange)) +
   scale_y_continuous(labels = scales::percent, limits = c(0, NA)) +
   labs(title = "Underage Victims: Offence Levels (residences vs public transport)",
-       x = "Offence level", y = "Percentage of the setting's victims under 18", fill = "Setting") +
+       x = "Offence level", y = "Percentage of Underage Victims", fill = "Setting") +
   theme_minimal()
 
 minor_sev_plt
@@ -330,9 +342,18 @@ ggsave("fig/02_exploration/02_rafa/hypothesis/offence_levels.png",
 
 # Offence levels follow the global rationale, nothing to see here
 
-# 6. Top 10 offences against victims under 18: residences vs public transport
+# 6. Top 10 offences against minors: residences vs public transport
 # Add the offence level to the name only when an offence appears under
-# more than one level in the same setting (e.g. SEX CRIMES)
+# more than one level in the same setting (like sex crimes)
+
+minor_off <- young |>
+  filter(minor, !is.na(ofns_desc), !is.na(law_cat_cd)) |>
+  count(setting, ofns_desc, law_cat_cd) |>
+  group_by(setting) |>
+  mutate(percentage = n / sum(n)) |>
+  slice_max(n, n = 10) |>
+  ungroup()
+
 minor_off <- minor_off |>
   group_by(setting, ofns_desc) |>
   mutate(n_levels = n()) |>
@@ -357,7 +378,7 @@ minor_off_plt <- ggplot(minor_off, aes(x = percentage, y = reorder(offence_key, 
   scale_fill_manual(values = c("Residence - FELONY"             = dark_blue,
                                "Residence - MISDEMEANOR"        = dv_blue,
                                "Residence - VIOLATION"          = light_blue,
-                               "Public transport - FELONY"      = "darkorange3",
+                               "Public transport - FELONY"      = dark_orange,
                                "Public transport - MISDEMEANOR" = orange,
                                "Public transport - VIOLATION"   = gold),
                     breaks = c("Residence - FELONY", "Residence - MISDEMEANOR", "Residence - VIOLATION",
