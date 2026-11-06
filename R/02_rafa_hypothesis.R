@@ -33,10 +33,13 @@ nypd <- nypd |> filter(!old_occurrence)
  # ----------------------- Future Work ------------------------ #
 # --------------------------------------------------------------- #
 
-# Check offence level per (apartment, house) vs (public_housing)
-# Check if sex crimes, rape and harrassment happen more at public housing
+# Check offense level per (apartment, house) vs (public_housing)
+# Check if sex crimes, rape and harassment happen more at public housing
 # Maybe check gender splits? Would be interesting to devise specific strategies
 # even if my solution remains global
+# Check if some crime specifics can be used to identify relationship to 
+# victim (count(subset(nypd, grepl("INCEST|FAMILY|DOMESTIC|CHILD", 
+#         pd_desc)), pd_desc, sort = TRUE))
 
 # --------------------------------------------------------------- #
   # ----------------------- Hypothesis ------------------------ #
@@ -331,19 +334,19 @@ minor_sev_plt <- ggplot(minor_sev, aes(x = law_cat_cd, y = percentage, fill = se
             position = position_dodge(width = 0.9), vjust = -0.5, size = 4) +
   scale_fill_manual(values = c("Residence" = dark_blue, "Public transport" = orange)) +
   scale_y_continuous(labels = scales::percent, limits = c(0, NA)) +
-  labs(title = "Underage Victims: Offence Levels (residences vs public transport)",
-       x = "Offence level", y = "Percentage of Underage Victims", fill = "Setting") +
+  labs(title = "Underage Victims: Offense Levels (residences vs public transport)",
+       x = "Offense level", y = "Percentage of Underage Victims", fill = "Setting") +
   theme_minimal()
 
 minor_sev_plt
 
-ggsave("fig/02_exploration/02_rafa/hypothesis/offence_levels.png",
+ggsave("fig/02_exploration/02_rafa/hypothesis/offense_levels.png",
        plot = minor_sev_plt, width = 10, height = 5, bg = white)
 
-# Offence levels follow the global rationale, nothing to see here
+# offense levels follow the global rationale, nothing to see here
 
-# 6. Top 10 offences against minors: residences vs public transport
-# Add the offence level to the name only when an offence appears under
+# 6. Top 10 offenses against minors: residences vs public transport
+# Add the offense level to the name only when an offense appears under
 # more than one level in the same setting (like sex crimes)
 
 minor_off <- young |>
@@ -359,17 +362,17 @@ minor_off <- minor_off |>
   mutate(n_levels = n()) |>
   ungroup()
 
-minor_off$offence_name <- ifelse(minor_off$n_levels > 1,
+minor_off$offense_name <- ifelse(minor_off$n_levels > 1,
                                  paste0(minor_off$ofns_desc, " (", tolower(minor_off$law_cat_cd), ")"),
                                  minor_off$ofns_desc)
 
 # Name made unique per setting, so each panel is sorted on its own
-minor_off$offence_key <- paste(minor_off$offence_name, minor_off$setting, sep = "___")
+minor_off$offense_key <- paste(minor_off$offense_name, minor_off$setting, sep = "___")
 
-# Colour key: setting + offence level, so each panel keeps its own colours
+# Colour key: setting + offense level, so each panel keeps its own colours
 minor_off$colour_key <- paste(minor_off$setting, minor_off$law_cat_cd, sep = " - ")
 
-minor_off_plt <- ggplot(minor_off, aes(x = percentage, y = reorder(offence_key, percentage),
+minor_off_plt <- ggplot(minor_off, aes(x = percentage, y = reorder(offense_key, percentage),
                                        fill = colour_key)) +
   geom_col() +
   geom_text(aes(label = scales::percent(percentage, accuracy = 0.1)), hjust = -0.1, size = 3.2) +
@@ -385,8 +388,8 @@ minor_off_plt <- ggplot(minor_off, aes(x = percentage, y = reorder(offence_key, 
                                "Public transport - FELONY", "Public transport - MISDEMEANOR",
                                "Public transport - VIOLATION")) +
   scale_x_continuous(labels = scales::percent, limits = c(0, NA), expand = expansion(mult = c(0, 0.2))) +
-  labs(title = "10 most Common Offences against Underage Victims (Residence & Pub. Trans.)",
-       x = "Percentage of each Premise/Location's Underage Victims per Crime", y = NULL, fill = "Offence level") +
+  labs(title = "10 most Common Offenses against Underage Victims (Residence & Pub. Trans.)",
+       x = "Percentage of each Premise/Location's Underage Victims per Crime", y = NULL, fill = "Offense level") +
   theme_minimal()
 
 minor_off_plt
