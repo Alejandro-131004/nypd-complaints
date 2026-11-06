@@ -15,6 +15,8 @@ pink <- "violet"
 black <- "black"
 red <- "firebrick"
 
+source <- "Data: NYPD Complaint Data, NYC Open Data (complaints reported from January 2020 to June 2026)"
+
 
 # Loading dataset and removing old occurrences
 nypd <- readRDS("data/nypd_2020_2026.rds")
@@ -83,7 +85,8 @@ ph_counts_plt <- ggplot(ph_counts, aes(x = report_year, y = n,
   labs(title  = "Victims in Public Housing by Sex (2020-2025)",
        x      = "Report year",
        y      = "Number of complaints",
-       colour = "Victim sex") +
+       colour = "Victim sex",
+       caption = source) +
   theme_minimal()
 
 ph_counts_plt
@@ -115,8 +118,9 @@ ph_share_plt <- ggplot(ph_share, aes(x = report_year, y = share,
   scale_y_continuous(labels = scales::percent, limits = c(0, 1)) +
   labs(title  = "Percentage of Victims in Public Housing by Sex (2020-2025)",
        x      = "Report year",
-       y      = "Sex percentage", 
-       colour = "Victim sex") +
+       y      = "Sex percentage",
+       colour = "Victim sex",
+       caption = source) +
   theme_minimal()
 
 ph_share_plt
@@ -174,7 +178,7 @@ dev_share_plt <- ggplot(dev_share, aes(x = reorder(label, -fem_share), y = fem_s
   labs(title = "NYCHA Developments with the Highest Female Share of Victims, 2020-2025",
        x = NULL,
        y = "Female percentage of victims (M/F only)",
-       caption = "Developments with at least 50 complaints. Data: NYPD Complaint Data, NYC Open Data (complaints reported from January 2020 to June 2026)") +
+       caption = paste0("Developments with at least 50 complaints.\n", source)) +
   theme_minimal() +
   theme(axis.text.x = element_text(size = 8))
 
@@ -205,7 +209,8 @@ dev_bottom_plt <- ggplot(dev_bottom, aes(x = reorder(label, fem_share), y = fem_
   scale_y_continuous(labels = scales::percent, limits = c(0, 1)) +
   labs(title = "Top 10 Lowest NYCHA Female Victim Percentage (> 50 victims)",
        x = NULL,
-       y = "Female share of victims (M/F only)") +
+       y = "Female share of victims (M/F only)",
+       caption = source) +
   theme_minimal() +
   theme(axis.text.x = element_text(size = 8))
 
@@ -245,7 +250,8 @@ ph_age_plt <- ggplot(ph_age, aes(x = vic_age_group, y = share)) +
   scale_y_continuous(labels = scales::percent, limits = c(0, NA)) +
   labs(title = "Age of Female Victims in Public Housing, 2020-2025",
        x = "Victim age group",
-       y = "Share of female victims in public housing") +
+       y = "Share of female victims in public housing",
+       caption = source) +
   theme_minimal()
 
 ph_age_plt
@@ -284,7 +290,8 @@ ph_age_hour_plt <- ggplot(ph_age_hour, aes(x = hour, y = share,
   labs(title = "Time of Day of Female Victims in Public Housing, by Age, 2020-2025",
        x = "Hour of occurrence (start of the offence)",
        y = "Share of the age group's complaints",
-       colour = "Victim age") +
+       colour = "Victim age",
+       caption = source) +
   theme_minimal()
 
 ph_age_hour_plt
@@ -319,7 +326,8 @@ apt_age_hour_plt <- ggplot(apt_age_hour, aes(x = hour, y = share,
   labs(title = "Time of Day of Female Victims in Apartment Houses, by Age, 2020-2025",
        x = "Hour of occurrence (start of the offence)",
        y = "Share of the age group's complaints",
-       colour = "Victim age") +
+       colour = "Victim age",
+       caption = source) +
   theme_minimal()
 
 apt_age_hour_plt
@@ -355,7 +363,8 @@ u18_daytype_plt <- ggplot(u18_daytype, aes(x = hour, y = share,
   labs(title = "Time of Day of Female Victims under 18 in Public Housing, Weekday vs Weekend",
        x = "Hour of occurrence (start of the offence)",
        y = "Share of the day type's complaints",
-       colour = NULL) +
+       colour = NULL,
+       caption = source) +
   theme_minimal()
 
 u18_daytype_plt

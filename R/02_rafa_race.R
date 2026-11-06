@@ -12,6 +12,8 @@ nice_green <- "green4"
 grey <- "grey85"
 white <- "white"
 
+source <- "Data: NYPD Complaint Data, NYC Open Data (complaints reported from January 2020 to June 2026)"
+
 
 # Loading dataset and removing old occurrences
 nypd <- readRDS("data/nypd_2020_2026.rds")
@@ -53,7 +55,8 @@ ggplot(boro, aes(x = boro_nm, fill = law_cat_cd)) +
     title   = "Crime Severity by Borough",
     x       = "Borough",
     y       = "Number of Complaints (Thousands)",
-    fill    = "Crime Severity") +
+    fill    = "Crime Severity",
+    caption = source) +
   theme_minimal() + 
   scale_fill_brewer(palette = "Reds", direction = -1)
 
@@ -72,7 +75,8 @@ ggplot(vic, aes(x = vic_race, fill = law_cat_cd)) +
     title   = "Crime Severity by Victim Race",
     x       = "Victim Race (as recorded by police)",
     y       = "Number of Complaints (Thousands)",
-    fill    = "Crime Severity") +
+    fill    = "Crime Severity",
+    caption = source) +
   theme_minimal() + 
   theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
   scale_fill_brewer(palette = "Reds", direction = -1)
@@ -97,7 +101,8 @@ ggplot(boro, aes(x = boro_nm, fill = law_cat_cd)) +
     title   = "Crime Severity by Borough",
     x       = "Borough",
     y       = "Share of the Borough's Complaints",
-    fill    = "Crime Severity") +
+    fill    = "Crime Severity",
+    caption = source) +
   theme_minimal() + 
   scale_fill_brewer(palette = "Reds", direction = -1)
 
@@ -118,7 +123,8 @@ ggplot(vic, aes(x = vic_race, fill = law_cat_cd)) +
     title   = "Population-Normalized Crime Severity by Victim Race",
     x       = "Victim Race (as recorded by police)",
     y       = "Complaints %",
-    fill    = "Crime Severity") +
+    fill    = "Crime Severity",
+    caption = source) +
   theme_minimal() + 
   theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
   scale_fill_brewer(palette = "Reds", direction = -1)
@@ -155,7 +161,7 @@ ggplot(boro_race, aes(x = boro_nm, fill = vic_race_top)) +
     x       = "Borough",
     y       = "Share of the Borough's Complaints",
     fill    = "Victim Race (as recorded by police)",
-    caption = "Complaints with unknown victim race excluded.") +
+    caption = paste0("Complaints with unknown victim race excluded.\n", source)) +
   theme_minimal() +
   scale_fill_manual(values = c("BLACK"          = orange,
                                "WHITE"          = gold,
@@ -204,6 +210,14 @@ sev_vs$ratio        <- sev_vs$share_race / sev_vs$share_others
 sev_vs <- subset(sev_vs, group_n >= 1000)
 sev_vs$is_top <- sev_vs$ratio == ave(sev_vs$ratio, sev_vs$boro_nm, sev_vs$law_cat_cd, FUN = max)
 
+# Short labels
+race_short <- c("AMERICAN INDIAN/ALASKAN NATIVE" = "Am. Indian/Alaskan",
+                "ASIAN / PACIFIC ISLANDER"       = "Asian/PI",
+                "BLACK"                          = "Black",
+                "BLACK HISPANIC"                 = "Black Hisp.",
+                "WHITE"                          = "White",
+                "WHITE HISPANIC"                 = "White Hisp.")
+
 boro_short <- c("BRONX" = "Bronx", "BROOKLYN" = "Brooklyn", "MANHATTAN" = "Manhattan",
                 "QUEENS" = "Queens", "STATEN ISLAND" = "Staten Is.")
 
@@ -221,7 +235,7 @@ ggplot(sev_vs, aes(x = boro_nm, y = vic_race, fill = ratio)) +
     x       = NULL,
     y       = "Victim Race (as recorded by police)",
     fill    = "Ratio to other\nraces in borough",
-    caption = "1.25 = this severity is a 25% larger share of the race's complaints than of other races' complaints in the borough.\nBlack outline: highest ratio in that borough and severity. Groups with fewer than 1,000 complaints excluded.") +
+    caption = paste0("1.25 = this severity is a 25% larger share of the race's complaints than of other races' complaints in the borough.\nBlack outline: highest ratio in that borough and severity. Groups with fewer than 1,000 complaints excluded.\n", source)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         panel.grid  = element_blank())
@@ -260,12 +274,6 @@ top_offences <- names(sort(table(vic_bc$ofns_desc), decreasing = TRUE))[1:8]
 mix <- subset(mix, ofns_desc %in% top_offences & group_n >= 1000)
 
 # Short labels
-race_short <- c("AMERICAN INDIAN/ALASKAN NATIVE" = "Am. Indian/Alaskan",
-                "ASIAN / PACIFIC ISLANDER"       = "Asian/PI",
-                "BLACK"                          = "Black",
-                "BLACK HISPANIC"                 = "Black Hisp.",
-                "WHITE"                          = "White",
-                "WHITE HISPANIC"                 = "White Hisp.")
 boro_short <- c("BRONX" = "Bronx", "BROOKLYN" = "Brooklyn", "MANHATTAN" = "Manhattan",
                 "QUEENS" = "Queens", "STATEN ISLAND" = "Staten Is.")
 
@@ -280,7 +288,8 @@ ggplot(mix, aes(x = boro_nm, y = vic_race, fill = ratio)) +
     title = "Over- and Under-Represented Offences by Victim Race and Borough",
     x     = NULL,
     y     = NULL,
-    fill  = "Ratio to\nborough average") +
+    fill  = "Ratio to\nborough average",
+    caption = source) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         panel.grid  = element_blank())
@@ -315,7 +324,8 @@ for (level in c("FELONY", "MISDEMEANOR", "VIOLATION")) {
       title = paste("Offence Counts by Victim Race:", tools::toTitleCase(tolower(level))),
       x     = NULL,
       y     = NULL,
-      fill  = "Complaints") +
+      fill  = "Complaints",
+      caption = source) +
     theme_minimal() +
     theme(panel.grid = element_blank())
   

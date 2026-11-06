@@ -15,6 +15,8 @@ pink <- "violet"
 black <- "black"
 red <- "firebrick"
 
+source <- "Data: NYPD Complaint Data, NYC Open Data (complaints reported from January 2020 to June 2026)"
+
 
 # Loading dataset and removing old occurrences
 nypd <- readRDS("data/nypd_2020_2026.rds")
@@ -48,7 +50,8 @@ ggplot(boro, aes(x = boro_nm, fill = law_cat_cd)) +
     title   = "Crime Severity by Borough",
     x       = "Borough",
     y       = "Number of Complaints (Thousands)",
-    fill    = "Crime Severity") +
+    fill    = "Crime Severity",
+    caption = source) +
   theme_minimal() + 
   scale_fill_brewer(palette = "Reds", direction = -1)
 
@@ -68,7 +71,8 @@ ggplot(vic_sex, aes(x = vic_sex, fill = law_cat_cd)) +
     title   = "Crime Severity by Victim Sex",
     x       = "Victim Sex",
     y       = "Number of Complaints (Thousands)",
-    fill    = "Crime Severity") +
+    fill    = "Crime Severity",
+    caption = source) +
   theme_minimal() +
   scale_fill_brewer(palette = "Reds", direction = -1)
 
@@ -89,7 +93,8 @@ ggplot(boro, aes(x = boro_nm, fill = law_cat_cd)) +
     title   = "Crime Severity by Borough",
     x       = "Borough",
     y       = "Percentage of the Borough's Complaints",
-    fill    = "Crime Severity") +
+    fill    = "Crime Severity",
+    caption = source) +
   theme_minimal() + 
   scale_fill_brewer(palette = "Reds", direction = -1)
 
@@ -113,7 +118,8 @@ ggplot(vic_sex, aes(x = vic_sex, fill = law_cat_cd)) +
     title   = "Crime Severity by Victim Sex",
     x       = "Victim Sex",
     y       = "Percentage of the Sex's Complaints",
-    fill    = "Crime Severity") +
+    fill    = "Crime Severity",
+    caption = source) +
   theme_minimal() +
   scale_fill_brewer(palette = "Reds", direction = -1)
 
@@ -146,7 +152,8 @@ ggplot(boro_sex, aes(x = boro_nm, fill = vic_sex)) +
     title   = "Victim Sex by Borough",
     x       = "Borough",
     y       = "Percentage of the Borough's Complaints",
-    fill    = "Victim Sex")
+    fill    = "Victim Sex",
+    caption = source) +
   theme_minimal() +
   scale_fill_manual(values = c("F" = pink, "M" = dv_blue),
                     labels = c("F" = "Female", "M" = "Male"))
@@ -187,7 +194,8 @@ ggplot(sex_sev, aes(x = law_cat_cd, y = share, fill = vic_sex)) +
     title = "Crime Severity by Victim Sex, per Borough",
     x     = "Crime Severity",
     y     = "Percentage of the Sex's Complaints in the Borough",
-    fill  = "Victim Sex") +
+    fill  = "Victim Sex",
+    caption = source) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_fill_manual(values = c("F" = pink, "M" = dv_blue),
@@ -218,7 +226,8 @@ ggplot(sex_in_sev, aes(x = law_cat_cd, y = share, fill = vic_sex)) +
     title = "Victim Sex within Each Crime Severity, per Borough",
     x     = "Crime Severity",
     y     = "Percentage of the Severity's Complaints",
-    fill  = "Victim Sex") +
+    fill  = "Victim Sex",
+    caption = source) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -263,7 +272,8 @@ ggplot(sex_off, aes(x = vic_sex, y = reorder(ofns_desc, total), fill = log2(rati
     title   = "Offence Counts by Victim Sex, per Offence Level",
     x       = NULL,
     y       = NULL,
-    fill    = "Times the\nother sex") +
+    fill    = "Times the\nother sex",
+    caption = source) +
   theme_minimal() +
   theme(panel.grid = element_blank())
 
@@ -302,7 +312,8 @@ ggplot(sex_prem, aes(x = vic_sex, y = reorder(prem_typ_desc, prem_total), fill =
     title   = "Crime Severity by Victim Sex and Premises",
     x       = NULL,
     y       = NULL,
-    fill    = "Times the\nother sex") +
+    fill    = "Times the\nother sex",
+    caption = source) +
   theme_minimal() +
   theme(panel.grid = element_blank())
 
