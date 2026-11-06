@@ -1,3 +1,5 @@
+getwd()
+list.files()
 library(dplyr)
 
 # 1. Read the dataset
