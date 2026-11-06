@@ -24,8 +24,8 @@ nypd <- readRDS("data/nypd_clean.rds")
 # Three figures, in the order we looked at them. Each one raised the question that the next one answers.
 #   E1. Which premises changed the most from 2020 to 2025?            -> the subway, by far
 #   E2. Which offences are behind the rise in the subway?             -> one offence class
-#   E3. What is inside that offence class, and who records it?       -> fare evasion, by the Transit Police
-# The hypothesis is written at the end of this file and tested in R/Hypothesis_subway.R.
+#   E3. What is inside that offence class, and who records it?        -> fare evasion, by the Transit Police
+# The hypothesis is written at the end of this file and tested in R/Hypothesis_4.R.
 # 2026 is left out because it only runs until June.
 # =================================================================================================================
 
@@ -35,9 +35,9 @@ dir.create(fig_dir, showWarnings = FALSE, recursive = TRUE)
 years <- 2020:2025
 
 
-# ---------------------------------------------------------------- #
+# ---------------------------------------------------------------- 
 # Data fix: offence classes with two spellings
-# ---------------------------------------------------------------- #
+# ---------------------------------------------------------------- 
 
 # Until 2023 some offence classes were cut at 30 characters ("OTHER OFFENSES RELATED TO THEF");
 # from 2024 they are written in full ("OTHER OFFENSES RELATED TO THEFT"). Counted by name, the
@@ -57,9 +57,9 @@ nypd <- nypd |>
                             ofns_desc))
 
 
-# ---------------------------------------------------------------- #
+# ---------------------------------------------------------------- 
 # E1. Which premises changed the most?
-# ---------------------------------------------------------------- #
+# ---------------------------------------------------------------- 
 
 # Premises with at least this many complaints in 2025 (small premises give unstable ratios)
 min_premise_2025 <- 5000
