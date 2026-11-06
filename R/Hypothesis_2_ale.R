@@ -134,15 +134,16 @@ top_ratio <- precincts |>
   filter(assaults >= min_assaults) |>
   slice_max(ratio, n = 15)
 
-ratio_plt <- ggplot(top_ratio, aes(x = ratio, y = reorder(addr_pct_cd, ratio))) +
-  geom_col(fill = dv_blue) +
+ratio_plt <- ggplot(top_ratio, aes(x = ratio, y = reorder(addr_pct_cd, ratio), fill = addr_pct_cd == "41")) +
+  geom_col() +
   geom_vline(xintercept = 1, colour = orange, linewidth = 1, linetype = "dashed") +
   geom_text(aes(label = paste(assaults, "assaults")), hjust = -0.1, size = 3.2) +
+  scale_fill_manual(values = c("FALSE" = dv_blue, "TRUE" = "grey60"), guide = "none") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.2))) +
   labs(
     title = "Precincts Where Assaults on Officers Are Most Over-Represented",
-    subtitle = paste0("Ratio = share of assaults / share of all complaints. Dashed line = 1, the same share of both. At least ",
-                      min_assaults, " assaults"),
+    subtitle = paste0("Ratio = share of assaults / share of all complaints. Dashed line = 1. At least ",
+                      min_assaults, " assaults. Grey = 81% Department of Correction"),
     x = "Ratio",
     y = "Precinct",
     caption = source
