@@ -298,8 +298,7 @@ minor_pct_season_tr_plt <- ggplot(minor_pct_season_tr, aes(x = hour, y = percent
   scale_colour_manual(values = c("School months" = orange, "Summer (Jul-Aug)" = gold)) +
   scale_x_continuous(breaks = 0:23) +
   scale_y_continuous(labels = scales::percent, limits = c(0, NA)) +
-  labs(title = "Weekday Percentage of Underage Victims 
-       (Public Transportation, School Months vs Summer)",
+  labs(title = "Weekday Percentage of Underage Victims (Public Transportation, School Months vs Summer)",
        x = "Hour of occurrence", y = "Percentage of Underage Victims", colour = NULL) +
   theme_minimal()
 
