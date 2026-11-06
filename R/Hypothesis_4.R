@@ -102,7 +102,8 @@ group_plt <- ggplot(by_group, aes(x = report_year, y = n, colour = group)) +
     caption = source
   ) +
   theme_minimal(base_size = 12) +
-  theme(legend.position = "none", plot.title.position = "plot", panel.grid.minor = element_blank())
+  theme(legend.position = "none", plot.title.position = "plot", panel.grid.minor = element_blank(),
+        plot.subtitle = element_text(size = 10, colour = "grey35"))
 
 ggsave(file.path(fig_dir, "h4_test_1_subway_by_group.png"), plot = group_plt, width = 10, height = 5.5, dpi = 300, bg = "white")
 
@@ -156,7 +157,8 @@ felony_plt <- ggplot(felony_index, aes(x = report_year, y = index, colour = ofns
     caption = source
   ) +
   theme_minimal(base_size = 12) +
-  theme(legend.position = "none", plot.title.position = "plot", panel.grid.minor = element_blank())
+  theme(legend.position = "none", plot.title.position = "plot", panel.grid.minor = element_blank(),
+        plot.subtitle = element_text(size = 10, colour = "grey35"))
 
 ggsave(file.path(fig_dir, "h4_test_2_felonies_index.png"), plot = felony_plt, width = 10, height = 5.5, dpi = 300, bg = "white")
 
@@ -229,7 +231,7 @@ ranking_plt <- ggplot(felony_top, aes(x = felonies, y = reorder(station, felonie
   ) +
   theme_minimal(base_size = 13) +
   theme(panel.grid.major.y = element_blank(), panel.grid.minor = element_blank(),
-        plot.title.position = "plot")
+        plot.title.position = "plot", plot.subtitle = element_text(size = 10, colour = "grey35"))
 
 ggsave(file.path(fig_dir, "h4_test_3_station_ranking.png"), plot = ranking_plt, width = 11, height = 6.5, dpi = 300, bg = "white")
 
@@ -280,6 +282,8 @@ time_plt <- ggplot(timed, aes(x = hour, y = wday, fill = pct)) +
     caption = source
   ) +
   theme_minimal(base_size = 12) +
-  theme(panel.grid = element_blank(), plot.title.position = "plot")
+  theme(panel.grid = element_blank(), plot.title.position = "plot",
+        plot.subtitle = element_text(size = 10, colour = "grey35"))
 
 ggsave(file.path(fig_dir, "h4_test_4_hour_weekday.png"), plot = time_plt, width = 10, height = 7, dpi = 300, bg = "white")
+
