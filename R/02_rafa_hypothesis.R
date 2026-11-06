@@ -223,8 +223,7 @@ minor_pct_day_res_plt <- ggplot(minor_pct_day_res, aes(x = hour, y = percentage,
   scale_x_continuous(breaks = 0:23) +
   scale_y_continuous(labels = scales::percent, limits = c(0, NA)) +
   labs(title = "Hourly Underage Victim Percentage (Residence, Weekday vs Weekend)",
-       x = "Hour of occurrence", y = "Percentage of Underage Victims", colour = NULL,
-       caption = source) +
+       x = "Hour of occurrence", y = "Percentage of Underage Victims", colour = NULL) +
   theme_minimal()
 
 minor_pct_day_res_plt
@@ -246,8 +245,7 @@ minor_pct_day_tr_plt <- ggplot(minor_pct_day_tr, aes(x = hour, y = percentage, c
   scale_x_continuous(breaks = 0:23) +
   scale_y_continuous(labels = scales::percent, limits = c(0, NA)) +
   labs(title = "Hourly Underage Victim Percentage (Public Transportation, Weekday vs Weekend)",
-       x = "Hour of occurrence", y = "Percentage of Underage Victims", colour = NULL,
-       caption = source) +
+       x = "Hour of occurrence", y = "Percentage of Underage Victims", colour = NULL) +
   theme_minimal()
 
 minor_pct_day_tr_plt
@@ -281,8 +279,7 @@ minor_pct_season_res_plt <- ggplot(minor_pct_season_res, aes(x = hour, y = perce
   scale_x_continuous(breaks = 0:23) +
   scale_y_continuous(labels = scales::percent, limits = c(0, NA)) +
   labs(title = "Weekday Percentage of Underage Victims (Residence, School Months vs Summer)",
-       x = "Hour of occurrence", y = "Percentage of Underage Victims", colour = NULL,
-       caption = source) +
+       x = "Hour of occurrence", y = "Percentage of Underage Victims", colour = NULL) +
   theme_minimal()
 
 minor_pct_season_res_plt
@@ -304,8 +301,7 @@ minor_pct_season_tr_plt <- ggplot(minor_pct_season_tr, aes(x = hour, y = percent
   scale_x_continuous(breaks = 0:23) +
   scale_y_continuous(labels = scales::percent, limits = c(0, NA)) +
   labs(title = "Weekday Percentage of Underage Victims (Public Transportation, School Months vs Summer)",
-       x = "Hour of occurrence", y = "Percentage of Underage Victims", colour = NULL,
-       caption = source) +
+       x = "Hour of occurrence", y = "Percentage of Underage Victims", colour = NULL) +
   theme_minimal()
 
 minor_pct_season_tr_plt
@@ -340,8 +336,7 @@ minor_sev_plt <- ggplot(minor_sev, aes(x = law_cat_cd, y = percentage, fill = se
   scale_fill_manual(values = c("Residence" = dark_blue, "Public transport" = orange)) +
   scale_y_continuous(labels = scales::percent, limits = c(0, NA)) +
   labs(title = "Underage Victims: Offense Levels (residences vs public transport)",
-       x = "Offense level", y = "Percentage of Underage Victims", fill = "Setting",
-       caption = source) +
+       x = "Offense level", y = "Percentage of Underage Victims", fill = "Setting") +
   theme_minimal()
 
 minor_sev_plt
@@ -395,8 +390,7 @@ minor_off_plt <- ggplot(minor_off, aes(x = percentage, y = reorder(offense_key, 
                                "Public transport - VIOLATION")) +
   scale_x_continuous(labels = scales::percent, limits = c(0, NA), expand = expansion(mult = c(0, 0.2))) +
   labs(title = "10 most Common Offenses against Underage Victims (Residence & Pub. Trans.)",
-       x = "Percentage of each Premise/Location's Underage Victims per Crime", y = NULL, fill = "Offense level",
-       caption = source) +
+       x = "Percentage of each Premise/Location's Underage Victims per Crime", y = NULL, fill = "Offense level") +
   theme_minimal()
 
 minor_off_plt
@@ -408,3 +402,7 @@ ggsave("fig/02_exploration/02_rafa/hypothesis/underage_top_10_crimes.png",
 # these crimes are as heinous as those displayed. It's no longer a matter of simple
 # robberies or fixing structures in misbehaviour: it's about children and teenagers'
 # lives, integrity and health.
+
+# Confirming percentages (I want to avoid visual mistakes)
+subset(minor_pct_season_tr, season == "School months" & hour %in% c(10, 7, 15))
+subset(minor_pct_day_res, day_type == "Weekday" & hour %in% c(9, 15:20))
