@@ -29,7 +29,7 @@ nypd <- readRDS("data/nypd_clean.rds")
 # 2026 is left out because it only runs until June.
 # =================================================================================================================
 
-fig_dir <- "fig/03_hypothesis/hypothesis_4/exploration"
+fig_dir <- "fig/02_exploration/hypothesis_4/exploration"
 dir.create(fig_dir, showWarnings = FALSE, recursive = TRUE)
 
 years <- 2020:2025
