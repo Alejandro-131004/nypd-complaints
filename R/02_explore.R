@@ -188,6 +188,9 @@ ggsave("fig/01_exploration/premise_yearly_evolution.png", plot = evolution_plt, 
 crimes_heatmap <- nypd_ocorr |> 
   filter(!is.na(hour), !is.na(wday)) |> 
   count(wday, hour)
+# wday comes from the data file with Portuguese labels (seg, ter, ..., dom), ordered Monday to Sunday.
+# Rename the levels to English, keeping the same order
+levels(crimes_heatmap$wday) <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 heatmap_plt <- ggplot(crimes_heatmap, aes(x = hour, y = wday, fill = n)) +
   geom_tile(colour = "white") +
   coord_flip() +
