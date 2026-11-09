@@ -162,3 +162,80 @@ g_matilde_h1b <- ggplot(hourly_share, aes(x = hour, y = pct, color = law_cat_cd)
 print(g_matilde_h1b)
 ggsave("fig/02_exploration/02_matilde/h1b_hourly_share_no_round_hours.png",
        plot = g_matilde_h1b, width = 10, height = 6, dpi = 300)
+
+
+# ---------------------------------------------------------------------
+# H1c: did the most frequent offenses change differently since 2020?
+# Index 2020 = 100 by report year. 2026 is left out because it only runs until June.
+# Offense names are cut to 30 characters, because some were truncated until 2023
+# and written in full from 2024 (e.g. "CRIMINAL MISCHIEF & RELATED OF").
+# ---------------------------------------------------------------------
+years <- 2020:2025
+
+offense_year <- nypd_ocorr |>
+  filter(report_year %in% years, !is.na(ofns_desc)) |>
+  mutate(offense = substr(ofns_desc, 1, 30)) |>
+  count(offense, report_year)
+
+top_offenses <- offense_year |>
+  group_by(offense) |>
+  summarise(total = sum(n), .groups = "drop") |>
+  slice_max(total, n = 6) |>
+  pull(offense)
+
+offense_index <- offense_year |>
+  filter(offense %in% top_offenses) |>
+  group_by(offense) |>
+  arrange(report_year, .by_group = TRUE) |>
+  mutate(index = 100 * n / first(n)) |>
+  ungroup()
+
+print(offense_index, n = Inf)
+
+# Law category of each offense (the most common one, since a few offenses have more than one)
+offense_level <- nypd_ocorr |>
+  filter(!is.na(ofns_desc)) |>
+  mutate(offense = substr(ofns_desc, 1, 30)) |>
+  count(offense, law_cat_cd) |>
+  group_by(offense) |>
+  slice_max(n, n = 1, with_ties = FALSE) |>
+  ungroup() |>
+  select(offense, law_cat_cd)
+
+offense_index <- offense_index |> left_join(offense_level, by = "offense")
+
+# Spread the end labels so they do not overlap: each label sits at least `gap` index points above the previous one
+spread_labels <- function(y, gap) {
+  for (i in seq_along(y)[-1]) y[i] <- max(y[i], y[i - 1] + gap)
+  y
+}
+index_ends <- offense_index |>
+  filter(report_year == max(years)) |>
+  arrange(index) |>
+  mutate(label_y = spread_labels(index, gap = 8))
+
+g_matilde_h1c <- ggplot(offense_index, aes(x = report_year, y = index, color = law_cat_cd, group = offense)) +
+  geom_hline(yintercept = 100, colour = "grey50", linetype = "dashed") +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 1.8) +
+  geom_segment(data = index_ends, aes(x = report_year, xend = report_year + 0.1, y = index, yend = label_y),
+               linewidth = 0.3, show.legend = FALSE) +
+  geom_text(data = index_ends, aes(y = label_y, label = offense), x = max(years) + 0.12,
+            hjust = 0, size = 3, show.legend = FALSE) +
+  scale_color_manual(values = tactical_colors) +
+  scale_x_continuous(breaks = years, expand = expansion(mult = c(0.02, 0.5))) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(
+    title = "Change in the Six Most Frequent Offenses Since 2020",
+    subtitle = "Index by report year, 2020 = 100",
+    x = "Report Year",
+    y = "Index (2020 = 100)",
+    caption = source_caption,
+    color = "Law Category"
+  ) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank())
+
+print(g_matilde_h1c)
+ggsave("fig/02_exploration/02_matilde/h1c_offense_index.png",
+       plot = g_matilde_h1c, width = 10, height = 6, dpi = 300)
