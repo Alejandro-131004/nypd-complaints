@@ -15,13 +15,16 @@ source <- "Data: NYPD Complaint Data, NYC Open Data (complaints reported from Ja
 # Clean data from R/01_clean.R ("(null)" already replaced by NA)
 nypd <- readRDS("data/nypd_clean.rds")
 
+# Names in the data are all in capitals.
+# This makes them easier to read in the figures by capitalizing only the first letter of each word.
+title_case <- function(x) gsub("\\b([a-z])", "\\U\\1", tolower(x), perl = TRUE)
 
 #==================================================================================================================
 # Hypothesis nº4: the rise of complaints in the subway
 #==================================================================================================================
 
 # =================================================================================================================
-# The exploration that led to this hypothesis is in R/Exploration_subway.R (figures h4_explore_1 to 3).
+# The exploration that led to this hypothesis is in R/exploration_bea.R (figures h4_explore_1 to 3).
 #
 # Hypothesis: the rise of complaints in the NYC subway since 2020 comes mostly from fare and transit-rule
 # enforcement, not from serious crime. A ranking of stations by total complaints therefore points to
@@ -30,7 +33,7 @@ nypd <- readRDS("data/nypd_clean.rds")
 # Decision it supports: where and when to place transit patrols against violent crime, separately
 # from fare enforcement.
 #
-# Each part below tests one piece of the hypothesis, with one figure (h4_test_1 to 4).
+# Each part below tests one piece of the hypothesis, with one figure (h4_test_1 to 6).
 #
 # Things to keep in mind:
 #   * Fare evasion complaints are created by the police themselves, so they measure enforcement
@@ -52,7 +55,7 @@ enforcement_pd <- c("THEFT OF SERVICES, UNCLASSIFIE",   # fare evasion
 subway <- nypd |>
   filter(report_year %in% years, prem_typ_desc %in% "TRANSIT - NYC SUBWAY") |>
   mutate(group = case_when(
-    pd_desc %in% enforcement_pd ~ "Fare evasion and transit rules",
+    pd_desc %in% enforcement_pd ~ "Fare and rule enforcement",
     law_cat_cd %in% "FELONY"    ~ "Felonies",
     TRUE                        ~ "Other misdemeanors and violations"
   ))
@@ -72,7 +75,7 @@ print(tidyr::pivot_wider(by_group, names_from = group, values_from = n))
 # Share of the 2020-2025 rise that comes from enforcement
 totals <- by_group |>
   group_by(report_year) |>
-  summarise(total = sum(n), enforcement = sum(n[group == "Fare evasion and transit rules"]), .groups = "drop")
+  summarise(total = sum(n), enforcement = sum(n[group == "Fare and rule enforcement"]), .groups = "drop")
 
 rise_total       <- totals$total[totals$report_year == 2025] - totals$total[totals$report_year == 2020]
 rise_enforcement <- totals$enforcement[totals$report_year == 2025] - totals$enforcement[totals$report_year == 2020]
@@ -81,7 +84,7 @@ pct_rise_enforcement <- round(100 * rise_enforcement / rise_total)
 print(totals)
 cat("Share of the rise that comes from enforcement:", pct_rise_enforcement, "%\n")
 
-group_colours <- c("Fare evasion and transit rules"    = dv_orange,
+group_colours <- c("Fare and rule enforcement"         = dv_orange,
                    "Felonies"                          = dv_dark,
                    "Other misdemeanors and violations" = "grey60")
 
@@ -124,6 +127,7 @@ top_felonies <- subway |>
 # Index: 2020 = 100, as in hypothesis nº2
 felony_index <- subway |>
   filter(ofns_desc %in% top_felonies, group == "Felonies") |>
+  mutate(ofns_desc = sub(" & Related Of$", "", title_case(ofns_desc))) |>
   count(ofns_desc, report_year) |>
   group_by(ofns_desc) |>
   arrange(report_year, .by_group = TRUE) |>
@@ -144,7 +148,7 @@ felony_plt <- ggplot(felony_index, aes(x = report_year, y = index, colour = ofns
   geom_line(linewidth = 1.1) +
   geom_point(size = 1.8) +
   geom_text(data = felony_ends, aes(label = ofns_desc), hjust = 0, nudge_x = 0.12, size = 3.4, fontface = "bold") +
-  scale_colour_manual(values = c("#0072B2", "#E69F00", "#009E73", "#CC79A7")) +   # Okabe-Ito
+  scale_colour_manual(values = c("#56B4E9", "#CC79A7", "#009E73", "#000000")) + 
   scale_x_continuous(breaks = years, expand = expansion(mult = c(0.02, 0.5))) +
   scale_y_continuous(limits = c(0, NA)) +
   labs(
@@ -175,7 +179,7 @@ stations <- subway |>
   group_by(station_name) |>
   summarise(
     total = n(),
-    enforcement = sum(group == "Fare evasion and transit rules"),
+    enforcement = sum(group == "Fare and rule enforcement"),
     felonies = sum(group == "Felonies"),
     .groups = "drop"
   ) |>
@@ -195,12 +199,8 @@ print(top_stations, n = Inf, width = Inf)
 n_overlap <- sum(top_stations$rank_total <= n_top_stations & top_stations$rank_felonies <= n_top_stations)
 cat("Stations in both top", n_top_stations, ":", n_overlap, "\n")
 
-# One ranking only, the one that matters for patrols against violent crime: the top stations by felonies.
-# Orange = the stations that a ranking by all complaints would leave out of its top, with their rank there.
-# (The stations that the total pushes up because of enforcement are listed in the console above.)
-
-# Station names are all in capitals in the data; write them as "Port Authority Bus Term" to read them easily
-title_case <- function(x) gsub("\\b([a-z])", "\\U\\1", tolower(x), perl = TRUE)
+# Focus on the stations with the most felonies, as these are the most relevant for planning patrols against serious crime.
+# Stations in blue would be left out of the top by a ranking of all complaints. 
 
 felony_top <- stations |>
   filter(rank_felonies <= n_top_stations) |>
@@ -217,14 +217,14 @@ n_missed <- sum(felony_top$missed)
 ranking_plt <- ggplot(felony_top, aes(x = felonies, y = reorder(station, felonies), fill = missed)) +
   geom_col(width = 0.7) +
   geom_text(aes(label = label, colour = missed), hjust = 0, nudge_x = 2, size = 3.6) +
-  scale_fill_manual(values = c(`FALSE` = "grey75", `TRUE` = dv_orange), guide = "none") +
-  scale_colour_manual(values = c(`FALSE` = "grey30", `TRUE` = dv_orange), guide = "none") +
+  scale_fill_manual(values = c(`FALSE` = "grey75", `TRUE` = dv_blue), guide = "none") +
+  scale_colour_manual(values = c(`FALSE` = "grey30", `TRUE` = dv_blue), guide = "none") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.45))) +
   labs(
     title = paste0("Ranking stations by all complaints misses ", n_missed, " of the ", n_top_stations,
                    " subway stations with the most felonies"),
     subtitle = paste0("The ", n_top_stations, " stations with the most felonies, ", min(recent_years), "-", max(recent_years),
-                      ".\nOrange = not in the top ", n_top_stations, " when all complaints are counted (its rank there in brackets)"),
+                      ".\nBlue = not in the top ", n_top_stations, " when all complaints are counted (its rank there in brackets)"),
     x = paste0("Felonies, ", min(recent_years), "-", max(recent_years)),
     y = NULL,
     caption = source
@@ -244,7 +244,7 @@ ggsave(file.path(fig_dir, "h4_test_3_station_ranking.png"), plot = ranking_plt, 
 timed <- subway |>
   filter(!old_occurrence, !is.na(hour), !is.na(wday),
          !cmplnt_fr_tm %in% c("00:00:00", "12:00:00"),
-         group %in% c("Fare evasion and transit rules", "Felonies")) |>
+         group %in% c("Fare and rule enforcement", "Felonies")) |>
   count(group, wday, hour) |>
   group_by(group) |>
   mutate(pct = 100 * n / sum(n)) |>     # share of the group, so both panels use the same scale
@@ -263,7 +263,7 @@ time_shares <- timed |>
             .groups = "drop")
 print(time_shares)
 
-enf_shares <- time_shares[time_shares$group == "Fare evasion and transit rules", ]
+enf_shares <- time_shares[time_shares$group == "Fare and rule enforcement", ]
 fel_shares <- time_shares[time_shares$group == "Felonies", ]
 
 time_plt <- ggplot(timed, aes(x = hour, y = wday, fill = pct)) +
@@ -272,11 +272,8 @@ time_plt <- ggplot(timed, aes(x = hour, y = wday, fill = pct)) +
   scale_fill_viridis_c(name = "% of the\ngroup", labels = function(x) paste0(x, "%")) +
   scale_x_continuous(breaks = 0:23, expand = c(0, 0)) +
   labs(
-    title = "Fare enforcement happens on weekday afternoons; felonies spread into the night and the weekend",
-    subtitle = paste0("14:00-17:59: ", enf_shares$afternoon, "% of enforcement vs ", fel_shares$afternoon, "% of felonies. ",
-                      "00:00-05:59: ", enf_shares$night, "% vs ", fel_shares$night, "%. ",
-                      "Weekend: ", enf_shares$weekend, "% vs ", fel_shares$weekend, "%.\n",
-                      "Subway complaints by hour and day of occurrence. Complaints recorded at exactly 00:00 or 12:00 are excluded"),
+    title = "Enforcement happens on weekday afternoons, while felonies spread into the night and the weekend",
+    subtitle = "Share of each group by hour and day of occurrence (exact 00:00 and 12:00 excluded)",
     x = "Hour of Occurrence",
     y = NULL,
     caption = source
@@ -287,3 +284,96 @@ time_plt <- ggplot(timed, aes(x = hour, y = wday, fill = pct)) +
 
 ggsave(file.path(fig_dir, "h4_test_4_hour_weekday.png"), plot = time_plt, width = 10, height = 7, dpi = 300, bg = "white")
 
+
+# ---------------------------------------------------------------- #
+# Part 5. When did enforcement change? Month by month
+# ---------------------------------------------------------------- #
+
+# Months from 2022, when enforcement was still almost zero. Report month (date the complaint was reported)
+monthly <- subway |>
+  filter(report_year >= 2022, group %in% c("Fare and rule enforcement", "Felonies")) |>
+  mutate(month = as.Date(format(reported_on, "%Y-%m-01"))) |>
+  count(month, group)
+
+# The month with the largest jump in enforcement compared with the month before (in complaints, not in %,
+# so that a jump from 7 to 33 in 2022 does not count more than one from 111 to 521)
+jumps <- monthly |>
+  filter(group == "Fare and rule enforcement") |>
+  arrange(month) |>
+  mutate(before = lag(n), rise = n - before) |>
+  slice_max(rise, n = 1)
+print(jumps)
+
+# Range of felonies per month, quoted in the title
+felony_range <- range(monthly$n[monthly$group == "Felonies"])
+
+monthly_plt <- ggplot(monthly, aes(x = month, y = n, colour = group)) +
+  geom_vline(xintercept = jumps$month, colour = "grey60", linetype = "dashed") +
+  geom_line(linewidth = 1.1) +
+  annotate("text", x = jumps$month, y = max(monthly$n), hjust = 1.05, vjust = 1, size = 3.4, colour = "grey30",
+           label = paste0(format(jumps$month, "%B %Y"), ":\n", jumps$before, " to ", jumps$n, " in one month")) +
+  geom_text(data = filter(monthly, month == max(month)), aes(label = group),
+            hjust = 0, nudge_x = 20, fontface = "bold", size = 3.6) +
+  scale_colour_manual(values = c("Fare and rule enforcement" = dv_orange, "Felonies" = dv_dark)) +
+  scale_x_date(breaks = as.Date(paste0(2022:2025, "-01-01")), date_labels = "%Y", expand = expansion(mult = c(0.02, 0.32))) +
+  scale_y_continuous(limits = c(0, NA), labels = scales::comma) +
+  labs(
+    title = paste0("Fare and rule enforcement jumped in ", format(jumps$month, "%B %Y"),
+                   ", while felonies stayed between ", felony_range[1], " and ", felony_range[2], " a month"),
+    subtitle = "Subway complaints per month of report, 2022-2025",
+    x = NULL,
+    y = "Complaints per month",
+    caption = source
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "none", plot.title.position = "plot", panel.grid.minor = element_blank(),
+        plot.subtitle = element_text(size = 10, colour = "grey35"))
+
+ggsave(file.path(fig_dir, "h4_test_5_monthly.png"), plot = monthly_plt, width = 10, height = 5.5, dpi = 300, bg = "white")
+
+
+# ---------------------------------------------------------------- #
+# Part 6. Where does enforcement happen, compared with felonies? By borough
+# ---------------------------------------------------------------- #
+
+# One number per borough: fare and rule enforcement complaints for each felony in its subway, 2024-2025.
+# If enforcement was similar across boroughs relative to serious crime, the values would be close to the city average (dashed line).
+# Staten Island is not included because it has no NYC subway stations. 
+borough_ratio <- subway |>
+  filter(report_year %in% recent_years, !is.na(boro_nm)) |>
+  group_by(boro_nm) |>
+  summarise(enforcement = sum(group == "Fare and rule enforcement"),
+            felonies = sum(group == "Felonies"), .groups = "drop") |>
+  mutate(ratio = enforcement / felonies,
+         borough = title_case(boro_nm))
+
+city_ratio <- sum(borough_ratio$enforcement) / sum(borough_ratio$felonies)
+print(borough_ratio)
+cat("City:", round(city_ratio, 1), "enforcement complaints per felony\n")
+
+top_b <- slice_max(borough_ratio, ratio, n = 1)
+low_b <- slice_min(borough_ratio, ratio, n = 1)
+
+borough_plt <- ggplot(borough_ratio, aes(x = ratio, y = reorder(borough, ratio))) +
+  geom_col(fill = dv_orange, width = 0.6) +
+  geom_vline(xintercept = city_ratio, colour = "grey30", linetype = "dashed") +
+  annotate("text", x = city_ratio, y = Inf, hjust = -0.08, vjust = 1.5, size = 3.6, colour = "grey30",
+           label = paste0("City: ", format(round(city_ratio, 1), nsmall = 1))) +
+  geom_text(aes(label = format(round(ratio, 1), nsmall = 1)), hjust = -0.3, size = 4) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.12))) +
+  scale_y_discrete(expand = expansion(add = c(0.6, 0.9))) +   # room above the top bar for the city label
+  labs(
+    title = paste0("In the ", top_b$borough, " subway there are ", format(round(top_b$ratio, 1), nsmall = 1),
+                   " enforcement complaints for each felony, against ", format(round(low_b$ratio, 1), nsmall = 1),
+                   " in ", low_b$borough),
+    subtitle = paste0("Fare and rule enforcement complaints divided by felonies, subway, ",
+                      min(recent_years), "-", max(recent_years), ". Staten Island has no subway stations"),
+    x = "Enforcement complaints per felony",
+    y = NULL,
+    caption = source
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(plot.title.position = "plot", panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank(), plot.subtitle = element_text(size = 10, colour = "grey35"))
+
+ggsave(file.path(fig_dir, "h4_test_6_borough.png"), plot = borough_plt, width = 10, height = 4.5, dpi = 300, bg = "white")
