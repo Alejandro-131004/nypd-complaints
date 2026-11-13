@@ -406,3 +406,46 @@ ggsave("fig/02_exploration/02_rafa/hypothesis/underage_top_10_crimes.png",
 # Confirming percentages (I want to avoid visual mistakes)
 subset(minor_pct_season_tr, season == "School months" & hour %in% c(10, 7, 15))
 subset(minor_pct_day_res, day_type == "Weekday" & hour %in% c(9, 15:20))
+subset(minor_pct_day_res, day_type == "Weekday" & hour %in% c(6, 7, 8, 9))
+
+
+# ----------------------------------------------------------------------------
+
+# 7. Offense levels per residence type: apartment vs house vs public housing
+#    (percentages within each residence type, so each type adds up to 100%)
+#    For underage victims only, swap `nypd` for `young |> filter(minor)`
+
+res_sev <- nypd |>
+  filter(grepl("RESIDENCE", prem_typ_desc), !is.na(law_cat_cd)) |>
+  mutate(res_type = case_when(
+    grepl("PUBLIC HOUSING", prem_typ_desc) ~ "Public housing",
+    grepl("APT", prem_typ_desc)            ~ "Apartment",
+    grepl("HOUSE", prem_typ_desc)          ~ "House",
+    TRUE ~ NA_character_)) |>
+  filter(!is.na(res_type)) |>
+  count(res_type, law_cat_cd) |>
+  group_by(res_type) |>
+  mutate(percentage = n / sum(n)) |>
+  ungroup()
+
+res_sev_plt <- ggplot(res_sev, aes(x = law_cat_cd, y = percentage, fill = res_type)) +
+  geom_col(position = "dodge") +
+  geom_text(aes(label = scales::percent(percentage, accuracy = 1)),
+            position = position_dodge(width = 0.9), vjust = -0.5, size = 4) +
+  scale_fill_manual(values = c("Apartment"      = dv_blue,
+                               "House"          = light_blue,
+                               "Public housing" = dark_blue)) +
+  scale_y_continuous(labels = scales::percent, limits = c(0, NA),
+                     expand = expansion(mult = c(0, 0.1))) +
+  labs(title = "Offense Levels per Residence Type (2020-2025)",
+       x = "Offense level", y = "Percentage of Complaints", fill = "Residence type",
+       caption = source) +
+  theme_minimal()
+
+res_sev_plt
+
+ggsave("fig/02_exploration/02_rafa/hypothesis/offense_levels_residence_type.png",
+       plot = res_sev_plt, width = 10, height = 5, bg = white)
+
+# Confirming counts and percentages
+res_sev
