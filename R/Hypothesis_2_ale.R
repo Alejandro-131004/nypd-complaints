@@ -510,6 +510,26 @@ sum(head(nypd_precincts, 10)$pct_assaults)
 sum(head(nypd_precincts, 10)$pct_all)
 
 # Highest ratios, among precincts with enough assaults
-nypd_precincts |>
+nypd_top_ratio <- nypd_precincts |>
   filter(assaults >= min_assaults) |>
-  slice_max(ratio, n = 10)
+  slice_max(ratio, n = 15)
+
+print(nypd_top_ratio)
+
+# Figure: the same ratio figure as Check 3, but only with complaints under NYPD jurisdiction
+nypd_ratio_plt <- ggplot(nypd_top_ratio, aes(x = ratio, y = reorder(addr_pct_cd, ratio))) +
+  geom_col(fill = dv_blue) +
+  geom_vline(xintercept = 1, colour = dv_orange, linewidth = 1, linetype = "dashed") +
+  geom_text(aes(label = paste(assaults, "assaults")), hjust = -0.1, size = 3.2) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.2))) +
+  labs(
+    title = "Precincts Where Assaults on Officers Are Most Over-Represented, NYPD Jurisdiction Only",
+    subtitle = paste0("Ratio = share of assaults / share of all complaints. Dashed line = 1. At least ",
+                      min_assaults, " assaults"),
+    x = "Ratio",
+    y = "Precinct",
+    caption = source
+  ) +
+  theme_minimal()
+
+ggsave(file.path(police_fig_dir, "assaults_ratio_nypd.png"), plot = nypd_ratio_plt, width = 10, height = 6, dpi = 300)
