@@ -92,8 +92,8 @@ h1_bronx_night_share <- ggplot(bronx_hourly_share, aes(x = hour, y = pct, color 
   scale_x_continuous(breaks = 0:23) +
   scale_y_continuous(limits = c(0, NA), labels = function(x) paste0(x, "%")) +
   labs(
-    title = "Share of Complaints by Hour in the Bronx: Felony Assault and Grand Larceny",
-    subtitle = "2020-2025. Shaded: night (21:00-04:59). Dashed line: 4.2%, the share of each hour if complaints were spread evenly\nComplaints at exactly 00:00 or 12:00 are excluded (possible unknown times); hour 12 is not shown",
+    title = "Felony Assault and Grand Larceny by Hour in the Bronx",
+    subtitle = "2020-2025. Shaded: night (21:00-04:59). Hour 12 is not shown.\nDashed line: 4.2%, the share of each hour if complaints were spread evenly.\nComplaints at exactly 00:00 or 12:00 are excluded (possible unknown times)",
     x = "Hour of the Day (0 - 23)",
     y = "% of the Offense's Complaints",
     color = "Offense",
@@ -104,7 +104,7 @@ h1_bronx_night_share <- ggplot(bronx_hourly_share, aes(x = hour, y = pct, color 
 
 print(h1_bronx_night_share)
 ggsave("fig/02_exploration/02_matilde/h1_bronx_night_share.png",
-       plot = h1_bronx_night_share, width = 10, height = 6, dpi = 300)
+       plot = h1_bronx_night_share, width = 7, height = 4.5, dpi = 300)
 
 # Observed (figure h1_bronx_night_share.png):
 #   * Grand larceny peaks in the afternoon (15:00-17:00); at night, its highest hour is 21:00.
@@ -143,7 +143,7 @@ print(night_share_with_midnight, n = Inf)
 h1_night_by_year <- ggplot(night_share_year, aes(x = report_year, y = pct_night, color = ofns_desc, group = ofns_desc)) +
   geom_hline(yintercept = 50, colour = "grey30", linetype = "dashed") +
   geom_hline(yintercept = 100 * 8 / 24, colour = "grey60", linetype = "dotted") +
-  annotate("text", x = 2020, y = 51.5, label = "50% (criterion)", hjust = 0, size = 3, colour = "grey30") +
+  annotate("text", x = 2020, y = 53, label = "50% (criterion)", hjust = 0, size = 3, colour = "grey30") +
   annotate("text", x = 2020, y = 31.8, label = "33.3% (evenly spread)", hjust = 0, size = 3, colour = "grey50") +
   geom_line(linewidth = 1.1) +
   geom_point(size = 1.8) +
@@ -152,7 +152,7 @@ h1_night_by_year <- ggplot(night_share_year, aes(x = report_year, y = pct_night,
   scale_y_continuous(limits = c(0, 60), labels = function(x) paste0(x, "%")) +
   labs(
     title = "Share of Complaints at Night in the Bronx, by Year",
-    subtitle = "Night: 21:00-04:59. Dashed line: 50%, the criterion of the hypothesis. Dotted line: 33.3%, if complaints were spread evenly\nComplaints at exactly 00:00 or 12:00 are excluded (possible unknown times)",
+    subtitle = "Felony assault and grand larceny. Night: 21:00-04:59.\nDashed line: 50%, the criterion. Dotted line: 33.3%, if complaints were spread evenly.\nComplaints at exactly 00:00 or 12:00 are excluded (possible unknown times)",
     x = "Report Year",
     y = "Night share (21:00-04:59)",
     color = "Offense",
@@ -164,7 +164,7 @@ h1_night_by_year <- ggplot(night_share_year, aes(x = report_year, y = pct_night,
 
 print(h1_night_by_year)
 ggsave("fig/02_exploration/02_matilde/h1_bronx_night_share_by_year.png",
-       plot = h1_night_by_year, width = 10, height = 6, dpi = 300)
+       plot = h1_night_by_year, width = 7, height = 4.5, dpi = 300)
 
 # Observed (figure h1_bronx_night_share_by_year.png):
 #   * Grand larceny stays below the 33.3% expected at night in every year.
@@ -273,7 +273,7 @@ h1_petit_afternoon_share <- ggplot(petit_hourly_share, aes(x = hour, y = pct, co
   scale_y_continuous(limits = c(0, NA), labels = function(x) paste0(x, "%")) +
   labs(
     title = "Share of Petit Larceny Complaints by Hour, Manhattan and the Bronx",
-    subtitle = "2020-2025. Shaded: afternoon (15:00-18:59). Dashed line: 4.2%, the share of each hour if complaints were spread evenly\nComplaints at exactly 00:00 or 12:00 are excluded (possible unknown times); hour 12 is not shown",
+    subtitle = "2020-2025. Shaded: afternoon (15:00-18:59). Hour 12 is not shown.\nDashed line: 4.2%, the share of each hour if complaints were spread evenly.\nComplaints at exactly 00:00 or 12:00 are excluded (possible unknown times)",
     x = "Hour of the Day (0 - 23)",
     y = "% of the Borough's Petit Larceny Complaints",
     color = "Borough",
@@ -282,8 +282,9 @@ h1_petit_afternoon_share <- ggplot(petit_hourly_share, aes(x = hour, y = pct, co
   theme_minimal() +
   theme(panel.grid.minor = element_blank(), legend.position = "top")
 
+print(h1_petit_afternoon_share)
 ggsave("fig/02_exploration/02_matilde/h1_petit_afternoon_share.png",
-       plot = h1_petit_afternoon_share, width = 10, height = 6, dpi = 300)
+       plot = h1_petit_afternoon_share, width = 7, height = 4.5, dpi = 300)
 
 # Observed:
 #   * Both boroughs peak in the afternoon: Manhattan at 15:00 and the Bronx at 17:00-18:00.
@@ -306,7 +307,7 @@ h1_petit_afternoon_by_year <- ggplot(afternoon_share_year, aes(x = report_year, 
   scale_y_continuous(limits = c(0, 40), labels = function(x) paste0(x, "%")) +
   labs(
     title = "Share of Petit Larceny Complaints in the Afternoon, by Year",
-    subtitle = "Manhattan and the Bronx. Afternoon: 15:00-18:59. Dashed line: 33.3%, the criterion of the hypothesis.\nDotted line: 16.7%, if complaints were spread evenly. Complaints at exactly 00:00 or 12:00 are excluded (possible unknown times)",
+    subtitle = "Manhattan and the Bronx. Afternoon: 15:00-18:59.\nDashed line: 33.3%, the criterion. Dotted line: 16.7%, if complaints were spread evenly.\nComplaints at exactly 00:00 or 12:00 are excluded (possible unknown times)",
     x = "Report Year",
     y = "Afternoon share (15:00-18:59)",
     color = "Borough",
@@ -316,8 +317,9 @@ h1_petit_afternoon_by_year <- ggplot(afternoon_share_year, aes(x = report_year, 
   theme(panel.grid.minor = element_blank(),
         legend.position = "top")
 
+print(h1_petit_afternoon_by_year)
 ggsave("fig/02_exploration/02_matilde/h1_petit_afternoon_by_year.png",
-       plot = h1_petit_afternoon_by_year, width = 10, height = 6, dpi = 300)
+       plot = h1_petit_afternoon_by_year, width = 7, height = 4.5, dpi = 300)
 
 # Observed:
 #   * Both lines stay close to 30% and never reach the 33.3% criterion.
