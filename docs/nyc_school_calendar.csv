@@ -1,0 +1,87 @@
+start,end,type,note,source
+2019-09-05,2020-06-26,school_year,School year 2019-20: first and last day,https://www.timeout.com/new-york-kids/things-to-do/guide-to-the-nyc-school-calendar-20192020
+2019-12-23,2020-01-01,break,Winter Recess (23 Dec added later),https://abc7ny.com/post/new-york-city-cancels-school-on-december-23/5564858/
+2020-01-20,2020-01-20,break,Martin Luther King Jr. Day,https://bronx.news12.com/new-york-city-backtoschool-2019-resources-40894904
+2020-01-27,2020-01-27,partial,Clerical Day: high school and 6-12 students do not attend,https://www.timeout.com/new-york-kids/things-to-do/guide-to-the-nyc-school-calendar-20192020
+2020-02-17,2020-02-21,break,Midwinter Recess,https://www.timeout.com/new-york-kids/things-to-do/guide-to-the-nyc-school-calendar-20192020
+2020-03-16,2021-09-12,covid,Buildings closed 16 Mar 2020; remote/hybrid until full in-person return on 13 Sep 2021,https://www.nymetroparents.com/article/2019-2020-nyc-public-school-calendar ; https://chalkbeat.org/newyork/2021/5/4/22418922/nyc-first-day-school-september-13
+2021-09-13,2022-06-27,school_year,School year 2021-22: first and last day,https://temp.schools.nyc.gov/docs/default-source/default-document-library/doe-calendar-sy-21-22
+2021-09-16,2021-09-16,break,Yom Kippur,https://temp.schools.nyc.gov/docs/default-source/default-document-library/doe-calendar-sy-21-22
+2021-10-11,2021-10-11,break,Italian Heritage Day/Indigenous Peoples' Day,https://temp.schools.nyc.gov/docs/default-source/default-document-library/doe-calendar-sy-21-22
+2021-11-02,2021-11-02,remote_day,"Election Day: fully remote, asynchronous",https://temp.schools.nyc.gov/docs/default-source/default-document-library/doe-calendar-sy-21-22
+2021-11-11,2021-11-11,break,Veterans Day,https://temp.schools.nyc.gov/docs/default-source/default-document-library/doe-calendar-sy-21-22
+2021-11-25,2021-11-26,break,Thanksgiving Recess,https://temp.schools.nyc.gov/docs/default-source/default-document-library/doe-calendar-sy-21-22
+2021-12-24,2021-12-31,break,Winter Recess,https://temp.schools.nyc.gov/docs/default-source/default-document-library/doe-calendar-sy-21-22
+2022-01-17,2022-01-17,break,Martin Luther King Jr. Day,https://temp.schools.nyc.gov/docs/default-source/default-document-library/doe-calendar-sy-21-22
+2022-01-31,2022-01-31,partial,PD day: 9-12 and 6-12 students do not attend,https://temp.schools.nyc.gov/docs/default-source/default-document-library/doe-calendar-sy-21-22
+2022-02-01,2022-02-01,break,Lunar New Year,https://temp.schools.nyc.gov/docs/default-source/default-document-library/doe-calendar-sy-21-22
+2022-02-21,2022-02-25,break,Midwinter Recess,https://temp.schools.nyc.gov/docs/default-source/default-document-library/doe-calendar-sy-21-22
+2022-04-15,2022-04-22,break,Spring Recess,https://temp.schools.nyc.gov/docs/default-source/default-document-library/doe-calendar-sy-21-22
+2022-05-02,2022-05-02,break,Eid al-Fitr,https://temp.schools.nyc.gov/docs/default-source/default-document-library/doe-calendar-sy-21-22
+2022-05-30,2022-05-30,break,Memorial Day,https://temp.schools.nyc.gov/docs/default-source/default-document-library/doe-calendar-sy-21-22
+2022-06-07,2022-06-07,partial,"Clerical Day: K-5, K-6, 6-8, K-12 and D75 students do not attend",https://temp.schools.nyc.gov/docs/default-source/default-document-library/doe-calendar-sy-21-22
+2022-06-09,2022-06-09,break,Anniversary Day/Chancellor's Conference Day,https://temp.schools.nyc.gov/docs/default-source/default-document-library/doe-calendar-sy-21-22
+2022-06-20,2022-06-20,break,Juneteenth (observed),https://temp.schools.nyc.gov/docs/default-source/default-document-library/doe-calendar-sy-21-22
+2022-09-08,2023-06-27,school_year,School year 2022-23: first and last day,https://pws.nycenet.edu/calendar/2022-2023-school-year-calendar
+2022-09-26,2022-09-27,break,Rosh Hashanah,https://pws.nycenet.edu/calendar/2022-2023-school-year-calendar
+2022-10-05,2022-10-05,break,Yom Kippur,https://pws.nycenet.edu/calendar/2022-2023-school-year-calendar
+2022-10-10,2022-10-10,break,Italian Heritage Day/Indigenous Peoples' Day,https://pws.nycenet.edu/calendar/2022-2023-school-year-calendar
+2022-11-08,2022-11-08,break,Election Day: no in-person or remote instruction,https://pws.nycenet.edu/calendar/2022-2023-school-year-calendar
+2022-11-11,2022-11-11,break,Veterans Day,https://pws.nycenet.edu/calendar/2022-2023-school-year-calendar
+2022-11-24,2022-11-25,break,Thanksgiving Recess,https://pws.nycenet.edu/calendar/2022-2023-school-year-calendar
+2022-12-26,2023-01-02,break,Winter Recess,https://pws.nycenet.edu/calendar/2022-2023-school-year-calendar
+2023-01-16,2023-01-16,break,Martin Luther King Jr. Day,https://pws.nycenet.edu/calendar/2022-2023-school-year-calendar
+2023-01-30,2023-01-30,partial,PD day: high school and 6-12 students do not attend,https://pws.nycenet.edu/calendar/2022-2023-school-year-calendar
+2023-02-20,2023-02-24,break,Midwinter Recess,https://pws.nycenet.edu/calendar/2022-2023-school-year-calendar
+2023-04-06,2023-04-07,break,Passover/Good Friday,https://pws.nycenet.edu/calendar/2022-2023-school-year-calendar
+2023-04-10,2023-04-14,break,Spring Recess,https://pws.nycenet.edu/calendar/2022-2023-school-year-calendar
+2023-04-21,2023-04-21,break,Eid al-Fitr,https://pws.nycenet.edu/calendar/2022-2023-school-year-calendar
+2023-05-29,2023-05-29,break,Memorial Day,https://pws.nycenet.edu/calendar/2022-2023-school-year-calendar
+2023-06-08,2023-06-08,break,Anniversary Day/Chancellor's Conference Day,https://pws.nycenet.edu/calendar/2022-2023-school-year-calendar
+2023-06-09,2023-06-09,partial,"Clerical Day: elementary, middle, K-12 and D75 students do not attend",https://pws.nycenet.edu/calendar/2022-2023-school-year-calendar
+2023-06-19,2023-06-19,break,Juneteenth,https://pws.nycenet.edu/calendar/2022-2023-school-year-calendar
+2023-09-07,2024-06-26,school_year,School year 2023-24: first and last day,https://schools.nyc.gov/docs/default-source/default-document-library/school-year-2023-24-calendar-updated
+2023-09-25,2023-09-25,break,Yom Kippur,https://schools.nyc.gov/docs/default-source/default-document-library/school-year-2023-24-calendar-updated
+2023-10-09,2023-10-09,break,Italian Heritage Day/Indigenous Peoples' Day,https://schools.nyc.gov/docs/default-source/default-document-library/school-year-2023-24-calendar-updated
+2023-11-07,2023-11-07,break,Election Day: students do not attend,https://schools.nyc.gov/docs/default-source/default-document-library/school-year-2023-24-calendar-updated
+2023-11-23,2023-11-24,break,Thanksgiving Recess,https://schools.nyc.gov/docs/default-source/default-document-library/school-year-2023-24-calendar-updated
+2023-12-25,2024-01-01,break,Winter Recess,https://schools.nyc.gov/docs/default-source/default-document-library/school-year-2023-24-calendar-updated
+2024-01-15,2024-01-15,break,Martin Luther King Jr. Day,https://schools.nyc.gov/docs/default-source/default-document-library/school-year-2023-24-calendar-updated
+2024-01-29,2024-01-29,partial,PD day: high school and 6-12 students do not attend,https://schools.nyc.gov/docs/default-source/default-document-library/school-year-2023-24-calendar-updated
+2024-02-13,2024-02-13,remote_day,"Snow: buildings closed, remote learning for all students",https://www.schools.nyc.gov/about-us/news/morning-bell/previously/morning-bell/2024/02/12/weather-advisory-nyc-public-schools-switch-to-remote-learning-on-2-13
+2024-02-19,2024-02-23,break,Midwinter Recess,https://schools.nyc.gov/docs/default-source/default-document-library/school-year-2023-24-calendar-updated
+2024-03-29,2024-04-01,break,Easter weekend (Good Friday and Monday after Easter),https://schools.nyc.gov/docs/default-source/default-document-library/school-year-2023-24-calendar-updated
+2024-04-10,2024-04-10,break,Eid al-Fitr,https://schools.nyc.gov/docs/default-source/default-document-library/school-year-2023-24-calendar-updated
+2024-04-22,2024-04-30,break,Spring Recess (including Passover),https://schools.nyc.gov/docs/default-source/default-document-library/school-year-2023-24-calendar-updated
+2024-05-27,2024-05-27,break,Memorial Day,https://schools.nyc.gov/docs/default-source/default-document-library/school-year-2023-24-calendar-updated
+2024-06-06,2024-06-06,break,Anniversary Day/Chancellor's Conference Day,https://schools.nyc.gov/docs/default-source/default-document-library/school-year-2023-24-calendar-updated
+2024-06-07,2024-06-07,partial,"Clerical Day: 3-K to 8, K-12 and D75 students do not attend",https://schools.nyc.gov/docs/default-source/default-document-library/school-year-2023-24-calendar-updated
+2024-06-17,2024-06-17,break,Eid al-Adha,https://schools.nyc.gov/docs/default-source/default-document-library/school-year-2023-24-calendar-updated
+2024-06-19,2024-06-19,break,Juneteenth,https://schools.nyc.gov/docs/default-source/default-document-library/school-year-2023-24-calendar-updated
+2024-09-05,2025-06-26,school_year,School year 2024-25: first and last day,https://pws.nycenet.edu/docs/default-source/default-document-library/school-year-2024-25-calendar-updated
+2024-10-03,2024-10-04,break,Rosh Hashanah,https://pws.nycenet.edu/docs/default-source/default-document-library/school-year-2024-25-calendar-updated
+2024-10-14,2024-10-14,break,Italian Heritage Day/Indigenous Peoples' Day,https://pws.nycenet.edu/docs/default-source/default-document-library/school-year-2024-25-calendar-updated
+2024-11-01,2024-11-01,break,Diwali,https://pws.nycenet.edu/docs/default-source/default-document-library/school-year-2024-25-calendar-updated
+2024-11-05,2024-11-05,break,Election Day: students do not attend,https://pws.nycenet.edu/docs/default-source/default-document-library/school-year-2024-25-calendar-updated
+2024-11-11,2024-11-11,break,Veterans Day,https://pws.nycenet.edu/docs/default-source/default-document-library/school-year-2024-25-calendar-updated
+2024-11-28,2024-11-29,break,Thanksgiving Recess,https://pws.nycenet.edu/docs/default-source/default-document-library/school-year-2024-25-calendar-updated
+2024-12-23,2025-01-01,break,Winter Recess,https://pws.nycenet.edu/docs/default-source/default-document-library/school-year-2024-25-calendar-updated
+2025-01-20,2025-01-20,break,Martin Luther King Jr. Day,https://pws.nycenet.edu/docs/default-source/default-document-library/school-year-2024-25-calendar-updated
+2025-01-27,2025-01-27,partial,PD day: high school and 6-12 students do not attend,https://pws.nycenet.edu/docs/default-source/default-document-library/school-year-2024-25-calendar-updated
+2025-01-29,2025-01-29,break,Lunar New Year,https://pws.nycenet.edu/docs/default-source/default-document-library/school-year-2024-25-calendar-updated
+2025-02-17,2025-02-21,break,Midwinter Recess,https://pws.nycenet.edu/docs/default-source/default-document-library/school-year-2024-25-calendar-updated
+2025-03-31,2025-03-31,break,Eid al-Fitr,https://pws.nycenet.edu/docs/default-source/default-document-library/school-year-2024-25-calendar-updated
+2025-04-14,2025-04-18,break,Spring Recess,https://pws.nycenet.edu/docs/default-source/default-document-library/school-year-2024-25-calendar-updated
+2025-05-26,2025-05-26,break,Memorial Day,https://pws.nycenet.edu/docs/default-source/default-document-library/school-year-2024-25-calendar-updated
+2025-06-05,2025-06-05,break,Eid al-Adha/Anniversary Day,https://pws.nycenet.edu/docs/default-source/default-document-library/school-year-2024-25-calendar-updated
+2025-06-06,2025-06-06,partial,"Clerical Day: 3-K to 8, K-12 and D75 students do not attend",https://pws.nycenet.edu/docs/default-source/default-document-library/school-year-2024-25-calendar-updated
+2025-06-19,2025-06-19,break,Juneteenth,https://pws.nycenet.edu/docs/default-source/default-document-library/school-year-2024-25-calendar-updated
+2025-09-04,2026-06-26,school_year,School year 2025-26: first and last day,https://schools.nyc.gov/calendar/2025-2026-school-year-calendar
+2025-09-23,2025-09-24,break,Rosh Hashanah,https://schools.nyc.gov/calendar/2025-2026-school-year-calendar
+2025-10-02,2025-10-02,break,Yom Kippur,https://schools.nyc.gov/calendar/2025-2026-school-year-calendar
+2025-10-13,2025-10-13,break,Italian Heritage Day/Indigenous Peoples' Day,https://schools.nyc.gov/calendar/2025-2026-school-year-calendar
+2025-10-20,2025-10-20,break,Diwali,https://schools.nyc.gov/calendar/2025-2026-school-year-calendar
+2025-11-04,2025-11-04,break,Election Day: students do not attend,https://schools.nyc.gov/calendar/2025-2026-school-year-calendar
+2025-11-11,2025-11-11,break,Veterans Day,https://schools.nyc.gov/calendar/2025-2026-school-year-calendar
+2025-11-27,2025-11-28,break,Thanksgiving Recess,https://schools.nyc.gov/calendar/2025-2026-school-year-calendar
+2025-12-24,2026-01-02,break,Winter Recess,https://schools.nyc.gov/calendar/2025-2026-school-year-calendar
