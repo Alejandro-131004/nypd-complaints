@@ -1,0 +1,14 @@
+Hypothesis 2. Changes after the PPA feedback
+Alejandro Gonçalves, Group F
+
+Revised hypothesis
+Under NYPD jurisdiction, assaults on officers concentrate every year in the same small group of precincts, above the share those precincts have of all complaints. A precinct counts as concentrated when its ratio is at least 1.5 in at least 5 of the 6 years (2020 to 2025). This criterion was fixed before running the code.
+
+What changed
+I added Check 12 to hypothesis_2.R. It computes the ratio per precinct and per year, only under NYPD jurisdiction, and counts in how many years each precinct reaches 1.5. Only precincts with at least 50 assaults are evaluated. Concentration and persistence now use the same measure.
+
+Results
+3 of 67 precincts meet the criterion. Precincts 6 and 84 reach 1.5 in all 6 years and Precinct 5 in 5. This means that, in almost every year, these precincts have a share of the city's assaults on officers at least 1.5 times larger than their share of the city's complaints. Together they hold 8.1% of assaults but only 3.1% of all complaints, so assaults on officers are about 2.6 times more concentrated there than their volume of crime would suggest. Precincts 44 and 78 reach 1.5 in 4 years. The hypothesis is supported.
+
+New figure
+assaults_ratio_by_year_nypd.png shows the ratio per year for the 15 precincts with the highest ratio. White is 1, red is above 1. The number in brackets is how many years each precinct reached 1.5.

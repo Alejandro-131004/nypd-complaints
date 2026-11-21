@@ -14,9 +14,9 @@ source <- "Data: NYPD Complaint Data, NYC Open Data (complaints reported from Ja
 nypd <- readRDS("data/nypd_clean.rds")
 
 
-#==================================================================================================================
+#====================================================================================================================
 # Hypothesis 2: assaults on police and peace officers
-#==================================================================================================================
+#====================================================================================================================
 
 # While checking the victim sex codes, I found M (male), F (female), U (unknown),
 # D (business or organisation), E (People of the State of New York) and L, which is not
@@ -27,6 +27,12 @@ nypd <- readRDS("data/nypd_clean.rds")
 # Hypothesis: recorded assaults on police and peace officers are concentrated in a small
 # group of precincts, beyond what their total complaints would suggest, and this pattern
 # persists over time.
+
+#====================================================================================================================
+# Revised after the PPA feedback (tested in Check 12): Under NYPD jurisdiction, assaults on officers concentrate every year in the same small group of precincts, above the 
+# share those precincts have of all complaints. A precinct counts as concentrated when its ratio is at least 1.5 in at 
+# least 5 of the 6 years. This criterion was fixed before looking at the result.
+#====================================================================================================================
 
 police_fig_dir <- "fig/02_exploration/02_ale/02_police_victims"
 dir.create(police_fig_dir, showWarnings = FALSE, recursive = TRUE)
@@ -290,18 +296,19 @@ print(top3_premises, n = Inf)
 # and the axis only shows the premise
 premises_plt <- ggplot(top3_premises, aes(x = pct, y = reorder(bar, pct))) +
   geom_col(fill = dv_blue) +
-  geom_text(aes(label = paste0(round(pct), "% (", n, ")")), hjust = -0.1, size = 3) +
+  geom_text(aes(label = paste0(round(pct), "% (", n, ")")), hjust = -0.1, size = 4.5) +
   facet_wrap(~ panel, ncol = 2, scales = "free_y") +
   scale_y_discrete(labels = setNames(top3_premises$premise, top3_premises$bar)) +
-  scale_x_continuous(expand = expansion(mult = c(0, 0.3))) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.45))) +
   labs(
     title = "Top 3 Premises in the Precincts Where Assaults on Officers Stand Out",
-    subtitle = "Precincts with a ratio of at least 1.5. % of the precinct's assaults, with the number of assaults in brackets",
+    subtitle = "Precincts with a ratio of at least 1.5\n% of the precinct's assaults, with the number of assaults in brackets",
     x = "% of the Precinct's Assaults",
     y = NULL,
     caption = source
   ) +
-  theme_minimal()
+  # Larger text, so the figure is readable at the width of one report column
+  theme_minimal(base_size = 16)
 
 ggsave(file.path(police_fig_dir, "assaults_top3_premises.png"), plot = premises_plt, width = 10, height = 8, dpi = 300)
 
@@ -533,3 +540,67 @@ nypd_ratio_plt <- ggplot(nypd_top_ratio, aes(x = ratio, y = reorder(addr_pct_cd,
   theme_minimal()
 
 ggsave(file.path(police_fig_dir, "assaults_ratio_nypd.png"), plot = nypd_ratio_plt, width = 10, height = 6, dpi = 300)
+
+
+# ---- Check 12. Is the concentration the same every year, under NYPD jurisdiction only? ----
+
+# Criterion fixed before looking at the result (suggested in the PPA feedback)
+ratio_limit <- 1.5
+min_years <- 5
+
+# Ratio per precinct and year: each year's shares are computed within that year
+nypd_yearly <- police |>
+  filter(juris_desc %in% "N.Y. POLICE DEPT", !is.na(addr_pct_cd)) |>
+  group_by(report_year, addr_pct_cd) |>
+  summarise(complaints = n(), assaults = sum(is_assault), .groups = "drop") |>
+  group_by(report_year) |>
+  add_shares() |>
+  ungroup()
+
+n_years <- n_distinct(nypd_yearly$report_year)
+
+# Years with a ratio of at least 1.5, only for precincts with enough assaults
+# (a precinct with very few assaults can reach a high ratio by chance)
+years_above <- nypd_yearly |>
+  filter(addr_pct_cd %in% nypd_precincts$addr_pct_cd[nypd_precincts$assaults >= min_assaults]) |>
+  group_by(addr_pct_cd) |>
+  summarise(years_above = sum(ratio >= ratio_limit)) |>
+  arrange(desc(years_above))
+
+print(years_above, n = Inf)
+
+# Precincts that meet the criterion
+concentrated <- filter(years_above, years_above >= min_years)
+print(concentrated)
+
+# How small the group is, and its share of assaults and of all complaints (2020 to 2025)
+nrow(concentrated)
+nrow(years_above)
+nypd_precincts |>
+  filter(addr_pct_cd %in% concentrated$addr_pct_cd) |>
+  summarise(pct_assaults = sum(pct_assaults), pct_all = sum(pct_all))
+
+# Figure: ratio per year for the 15 precincts with the highest ratio over the whole period
+# White = 1 (the same share of both), red above 1, blue below 1, as in Lab 4
+ratio_year_data <- nypd_yearly |>
+  filter(addr_pct_cd %in% nypd_top_ratio$addr_pct_cd) |>
+  left_join(years_above, by = "addr_pct_cd") |>
+  mutate(precinct_label = paste0(addr_pct_cd, " (", years_above, " of ", n_years, ")"))
+
+ratio_year_plt <- ggplot(ratio_year_data,
+                         aes(x = factor(report_year), y = reorder(precinct_label, ratio, FUN = mean), fill = ratio)) +
+  geom_tile(colour = "white") +
+  geom_text(aes(label = round(ratio, 1)), size = 3.2) +
+  scale_fill_gradient2(low = dv_blue, mid = "white", high = "#C0392B", midpoint = 1) +
+  labs(
+    title = "Ratio of Assaults on Officers to All Complaints per Year, NYPD Jurisdiction Only",
+    subtitle = paste0("15 precincts with the highest ratio from 2020 to 2025. White = 1, the same share of both\n",
+                      "In brackets, years with a ratio of at least ", ratio_limit),
+    x = "Report Year",
+    y = "Precinct",
+    fill = "Ratio",
+    caption = source
+  ) +
+  theme_minimal()
+
+ggsave(file.path(police_fig_dir, "assaults_ratio_by_year_nypd.png"), plot = ratio_year_plt, width = 10, height = 6, dpi = 300)
