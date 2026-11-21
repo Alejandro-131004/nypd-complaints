@@ -30,6 +30,9 @@ nypd_ocorr <- nypd |> filter(!old_occurrence)
 
 # Dropped from the first version: holidays and victim profiles. Holidays are covered by hypothesis 2 (assaults on officers) and victims by hypothesis 3.
 # Decision it supports: when and where to reinforce NYPD patrols.
+
+# Note: this formulation was reformulated after the checkpoint 1 feedback (it could not be
+# contradicted by any figure). The new, verifiable version is in R/H1_reformulated.R.
 # ---------------------------------------------------------------------
 
 # Plot styling options
