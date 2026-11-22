@@ -1,54 +1,50 @@
----
-title: "h1_checkpoint2"
-output: html_document
----
-
 # Checkpoint 2: Hypothesis 1
- 
+
 **Research question:** Where and when do reported crimes concentrate across New York City, and how do their severity and offense types shape operational patterns?
- 
+
 **Reformulation:** the checkpoint 1 hypothesis ("reported crime does not distribute randomly") could not be contradicted by any figure. It was reformulated with a borough, a time window, an offense and a threshold that the data can contradict. Complaints at exactly 00:00 or 12:00 are excluded (possible unknown times).
- 
+
 - **Code, criteria and full results:** `R/H1_reformulated.R`
 - **First version and its tests (H1a–H1d):** `R/Hypothesis_matilde.R`
 - **Figures:** `fig/02_exploration/02_matilde/`
- 
+
 ---
- 
+
 ## H1.1: felony assault and grand larceny at night in the Bronx (refuted)
- 
+
 > In the Bronx, more than 50% of felony assault complaints, and more than 50% of grand larceny complaints, occur at night (21:00–04:59), in at least 5 of the 6 years from 2020 to 2025.
- 
+
 The night share never reaches 50% (0 of 6 years): felony assault 33.5%–38.5%, grand larceny 22.7%–25.8% (33.3% if complaints were spread evenly). Keeping the complaints at 00:00 does not change the verdict.
- 
-![Night share by year](../fig/02_exploration/02_matilde/h1_bronx_night_share_by_year.png)
- 
+
+![Night share by year](../../fig/02_exploration/02_matilde/h1_bronx_night_share_by_year.png)
+
 Why: grand larceny peaks in the afternoon and felony assault at 20:00, just before the night window.
- 
-![Share by hour](../fig/02_exploration/02_matilde/h1_bronx_night_share.png)
- 
+
+![Share by hour](../../fig/02_exploration/02_matilde/h1_bronx_night_share.png)
+
+
 ## H1.2: petit larceny in the afternoon in Manhattan and the Bronx (refuted)
- 
+
 Comes from the exploration, after H1.1 was refuted.
- 
+
 > In Manhattan, and separately in the Bronx, more than 33.3% of petit larceny complaints occur in the afternoon (15:00–18:59), in at least 5 of the 6 years from 2020 to 2025.
- 
+
 The afternoon share never exceeds 33.3% (0 of 6 years): Bronx 26.7%–29.0%, Manhattan 28.2%–29.0%, well above the 16.7% of an even spread.
- 
-![Afternoon share by year](../fig/02_exploration/02_matilde/h1_petit_afternoon_by_year.png)
- 
+
+![Afternoon share by year](../../fig/02_exploration/02_matilde/h1_petit_afternoon_by_year.png)
+
 Both boroughs peak in the afternoon (Manhattan at 15:00, the Bronx at 17:00–18:00).
- 
-![Share by hour](../fig/02_exploration/02_matilde/h1_petit_afternoon_share.png)
- 
+
+![Share by hour](../../fig/02_exploration/02_matilde/h1_petit_afternoon_share.png)
+
 ---
- 
+
 ## Discarded hypotheses
- 
+
 - **The original Hypothesis 1:** no figure could contradict it.
 - **The sub-hypotheses H1a–H1d:** no threshold that the data could contradict; H1a also restates something already known (the Bronx and Manhattan have the highest felony rates per resident).
 - **Holidays and victim profiles:** covered by Hypotheses 2 and 3.
+
 ## What the Mayor and the NYPD could do
- 
+
 Reinforce high-visibility patrols in the afternoon and early evening, and in the highest-volume boroughs once adjusted for population. Prevention campaigns could target petit larceny, while specialised units focus on felony assault and grand larceny.
- 
