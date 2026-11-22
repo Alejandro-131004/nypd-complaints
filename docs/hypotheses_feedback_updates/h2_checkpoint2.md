@@ -31,4 +31,4 @@ The figure shows the ratio per year for the 15 precincts with the highest ratio.
 
 ## Discarded hypothesis
 
-- **Adults using children to commit crimes:** the data does not record whether an adult directed a suspect, and suspects under 18 were too few in drug complaints (481 of 73,125 with a known age). Code in `R/youth_complaints.R`.
+- **Adults using children to commit crimes:** the data does not record whether an adult directed a suspect, and suspects under 18 were too few in drug complaints (481 of 73,125 with a known age). Code in `R/Hypothesis_ale.R`.
