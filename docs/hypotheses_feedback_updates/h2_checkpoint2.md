@@ -2,7 +2,7 @@
 
 **Research question:** Where and when are assaults on police and peace officers concentrated?
 
-- **Code, criterion and full results:** `R/hypothesis_2.R` (Check 12)
+- **Code, criterion and full results:** `R/Hypothesis_2_ale.R` (Check 12)
 - **Figures:** `fig/02_exploration/02_ale/02_police_victims/`
 
 ---
@@ -23,7 +23,7 @@ I added Check 12. It computes the ratio per precinct and per year, only under NY
 
 ![Ratio per year, NYPD jurisdiction only](../../fig/02_exploration/02_ale/02_police_victims/assaults_ratio_by_year_nypd.png)
 
-If you're unable to see the figure, it's in `fig/02_exploration/02_ale/02_police_victims/assaults_ratio_by_year_nypd.png` 
+Figure file: `fig/02_exploration/02_ale/02_police_victims/assaults_ratio_by_year_nypd.png`
 
 The figure shows the ratio per year for the 15 precincts with the highest ratio. White is 1, red is above 1. The number in brackets is how many years each precinct reached 1.5. It evolves from two checkpoint 1 figures, the counts per year (`assaults_by_year.png`) and the ratio over the whole period (`assaults_ratio.png`), and now shows both parts of the hypothesis with the same measure.
 
