@@ -380,4 +380,38 @@ minor_station_tr_plt
 ggsave("fig/02_exploration/02_rafa/hypothesis_revisited/where_station.png",
        plot = minor_station_tr_plt, width = 9, height = 7, bg = white)
 
-# Conclusion:
+
+
+# 3.4 Manhattan, Brooklyn and Queens, side by side
+#     Left: all public transport victims. Right: underage victims at 7h and 15h on class days.
+#     Each panel has its own scale; labels show each borough's share of the whole city.
+
+boro_focus <- c("MANHATTAN", "BROOKLYN", "QUEENS")
+
+minor_boro_focus_tr <- bind_rows(
+  minor_boro_tr |> mutate(group = "All public transport victims", n = n_all, percentage = pct_all),
+  minor_boro_tr |> mutate(group = "Underage victims at 7h and 15h on class days", n = n_peak, percentage = pct_peak)
+) |>
+  filter(boro_nm %in% boro_focus)
+minor_boro_focus_tr$boro_nm <- factor(minor_boro_focus_tr$boro_nm, levels = boro_focus)
+
+minor_boro_focus_tr_plt <- ggplot(minor_boro_focus_tr, aes(x = boro_nm, y = n, fill = group)) +
+  geom_col(width = 0.7) +
+  geom_text(aes(label = scales::percent(percentage, accuracy = 1)),
+            vjust = 1.5, size = 3.8) +
+  facet_wrap(~ group, scales = "free_y") +
+  scale_fill_manual(values = c("All public transport victims" = grey,
+                               "Underage victims at 7h and 15h on class days" = orange),
+                    guide = "none") +
+  scale_x_discrete(labels = c("Manhattan", "Brooklyn", "Queens")) +
+  scale_y_continuous(labels = scales::comma, limits = c(0, NA)) +
+  labs(title = "Public Transportation Victims in Manhattan, Brooklyn and Queens (2020-2025)",
+       subtitle = "Labels: share of the city's victims (relative to panel title) ",
+       x = NULL, y = "Number of victims",
+       caption = source_cal) +
+  theme_minimal()
+
+minor_boro_focus_tr_plt
+
+ggsave("fig/02_exploration/02_rafa/hypothesis_revisited/where_borough_focus.png",
+       plot = minor_boro_focus_tr_plt, width = 11, height = 6, bg = white)
