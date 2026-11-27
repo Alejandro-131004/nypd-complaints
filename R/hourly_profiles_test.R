@@ -104,7 +104,7 @@ profiles |>
 #   * 15:00-18:59: underage victims 45.9%, fare evasion 31.7%, total 25.2%; H2 22.8%, below the total.
 # For reference: if complaints were spread evenly, 19:00-04:59 = 41.7%, 7h + 15h = 8.3%, 15-18 = 16.7%
 
-#3 How similar is each profile to the total? (correlation of the 24 hourly shares; 1 = same shape)
+#3 How similar is each profile to the total?
 total_profile <- profiles |> filter(group == "Total") |> select(hour, total = pct)
 profiles |>
   filter(group != "Total") |>
@@ -112,11 +112,12 @@ profiles |>
   group_by(group) |>
   summarise(cor_with_total = round(cor(pct, total), 2), .groups = "drop") |>
   print()
-# Observed (first run, before excluding 00:01):
+# Observed:
 #   * Underage victims 0.51: the profile most different from the total.
-#   * Subway felonies 0.74, transit victims of all ages 0.76, H2 0.79, fare evasion 0.82.
-#   * All subway complaints 0.86: the closest to the total, probably because it mixes every
-#     offence, as the total does; fare evasion is also close to the total.
+#   * Transit victims of all ages 0.77, H2 0.78, fare evasion 0.80.
+#   * Subway felonies 0.86 (0.74 before excluding 00:01) and all subway complaints 0.87: the closest
+#     to the total. All subway complaints mix every offence, as the total does; once 00:01 is
+#     excluded, subway felonies follow almost the same daily shape as the total.
 
 #4. Wide table: the hourly shares side by side
 profiles_wide <- profiles |>
