@@ -104,9 +104,7 @@ n_days <- days |> count(school_day, name = "n_days")
 
 
 # 1. I'll start by applying it to the weekday share of underage victims per hour 
-minor_counts_tr <- young_tr |>
-  filter(minor, day_type == "Weekday") |>
-  count(hour)
+minor_counts_tr <- young_tr |> filter(minor, day_type == "Weekday") |> count(hour)
 
 minor_counts_tr_plt <- ggplot(minor_counts_tr, aes(x = hour, y = n)) +
   geom_line(linewidth = 1.2, colour = orange) +
@@ -149,3 +147,7 @@ minor_pct_season_tr_plt <- ggplot(minor_pct_season_tr, aes(x = hour, y = percent
   theme_minimal()
 
 ggplotly(minor_pct_season_tr_plt)
+
+
+# 3 Now, I'd like to adapt my 4 panel static plot to interactively choose
+# which comparison I want to make
