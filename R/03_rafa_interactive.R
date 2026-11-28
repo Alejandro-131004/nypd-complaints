@@ -151,13 +151,35 @@ ggplotly(school_vs_summer)
 
 
 valid_age_tr <- left_join(valid_age_tr, days, by = "occurred_on")
-names(valid_age_tr)
+# names(valid_age_tr)
 
 minor_pct_all_seasons <- valid_age_tr |> 
+      # Filter out Claude's fetched COVID weekends and partial days
       filter(school_day %in% c("Classes", reasons)) |>
       group_by(school_day, hour) |>
-      summarise(n_all = n(), n_minor = sum(minor), percentage = n_minor / n_all, .groups = "drops")
-      
+      summarise(n_all = n(), n_minor = sum(minor), 
+                percentage = n_minor / n_all, .groups = "drop")
+
+
+all_seasons_pct_plt <- ggplot(minor_pct_all_seasons, aes(x=hour, y=percentage ,
+                                                         colour=school_day,
+                                                         group=school_day)) +
+          geom_line(linewidth=1.2) + geom_point(size=2)  +
+          
+          # Specific color choices for easier differencing
+          scale_colour_manual(values = c("Classes"= gold, "Weekend"=orange,
+                                         "COVID"=red, "Holiday/Recess"=dark_blue,
+                                         "Summer Break"= nice_green)) +
+          # Adding all hour ticks
+          scale_x_continuous(breaks = 0:23) + 
+  
+          # Switching from 0.num to percentages
+          scale_y_continuous(labels = scales::percent) + 
+          
+          labs
+
+all_seasons_pct_plt
+                      
                          
   
 
