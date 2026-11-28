@@ -20,8 +20,8 @@ red <- "firebrick"
 
 
 # Had to swap these out, they were disappearing in plotly
-#source <- "Data: NYPD Complaint Data, NYC Open Data (complaints reported from January 2020 to June 2026)"
-#source_cal <- paste0(source, "\nSchool calendar: NYC Public Schools, 2019-20 to 2025-26 (schools.nyc.gov/calendar)")
+source <- "Data: NYPD Complaint Data, NYC Open Data (complaints reported from January 2020 to June 2026)"
+source_cal <- paste0(source, "\nSchool calendar: NYC Public Schools, 2019-20 to 2025-26 (schools.nyc.gov/calendar)")
 
 # HTML version
 cite <- paste0("<br><sup>Data: NYPD Complaint Data, NYC Open Data (complaints reported from January 2020 to June 2026)",
@@ -164,24 +164,31 @@ minor_pct_all_seasons <- valid_age_tr |>
 all_seasons_pct_plt <- ggplot(minor_pct_all_seasons, aes(x=hour, y=percentage ,
                                                          colour=school_day,
                                                          group=school_day)) +
-          geom_line(linewidth=1.2) + geom_point(size=2)  +
+    geom_line(linewidth=1.2) + geom_point(size=2)  +
+    
+    # Specific color choices for easier differencing
+    scale_colour_manual(values = c("Classes"= gold, "Weekend"=orange,
+                                   "COVID"=red, "Holiday/Recess"=dark_blue,
+                                   "Summer Break"= nice_green)) +
+    # Adding all hour ticks
+    scale_x_continuous(breaks = 0:23) +
+    # Switching from 0.num to percentages
+    scale_y_continuous(labels = scales::percent) + 
           
-          # Specific color choices for easier differencing
-          scale_colour_manual(values = c("Classes"= gold, "Weekend"=orange,
-                                         "COVID"=red, "Holiday/Recess"=dark_blue,
-                                         "Summer Break"= nice_green)) +
-          # Adding all hour ticks
-          scale_x_continuous(breaks = 0:23) + 
-  
-          # Switching from 0.num to percentages
-          scale_y_continuous(labels = scales::percent) + 
-          
-          labs
+  labs(title=paste0("Percentage of Underage Victims per Hour (All Seasons, Public Transportation)"), 
+      x="Time of Day", y="Percentage of Underage Victims", caption=source_cal)
 
 all_seasons_pct_plt
-                      
-                         
+
+ggplotly(all_seasons_pct_plt)
   
+# Let's figure out a way to have it default to only classes and weekend being on
 
+all_seasons_interactive <- ggplotly(all_seasons_pct_plt)
+all_seasons_interactive <- style(all_seasons_interactive, visible="legendonly", 
+                                 # these are the ones that'll be ommited by
+                                 # default, as they are "legend only"
+                                 traces = c(2, 3, 4))
 
+all_seasons_interactive
 
