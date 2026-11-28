@@ -39,9 +39,11 @@ dir.create("fig/03_interaction/underage_public_transport_interactive", showWarni
 # As suggested in this week's powerpoint, I'm going to start by re-running
 # my most relevant images (from ppa and after feedback) and applying ggplotly(p)
 
+# IMPORTANT: forgot to mention in earlier scripts but my pct naming convention
+# is NOT precinct, but percentage!!
 
 
-# ----------------- Important Variables
+# ----------------- Important Variables ---------------- 
 
 # First, I'll organize important variables to avoid cluttering down the line
 
@@ -52,13 +54,13 @@ reasons    <- c("Holiday/Recess", "Summer Break", "COVID", "Weekend")
 
 
 # 2. Public transport victims with a valid age, from 2020
-young_tr <- nypd |>
+valid_age_tr <- nypd |>
   filter(grepl("TRANSIT|^BUS ", prem_typ_desc), !is.na(hour), !is.na(occurred_on),
          vic_age_group %in% valid_ages)
 
-young_tr$minor       <- young_tr$vic_age_group == "<18"
-young_tr$occurred_on <- as.Date(young_tr$occurred_on)
-young_tr             <- young_tr |> filter(occurred_on >= as.Date("2020-01-01"))
+valid_age_tr$minor       <- valid_age_tr$vic_age_group == "<18"
+valid_age_tr$occurred_on <- as.Date(valid_age_tr$occurred_on)
+valid_age_tr             <- valid_age_tr |> filter(occurred_on >= as.Date("2020-01-01"))
 
 
 # 3. School calendar setup (claude helped do this setup)
@@ -92,19 +94,18 @@ days$school_day <- case_when(
 start_year <- as.integer(format(days$occurred_on, "%Y")) - (as.integer(format(days$occurred_on, "%m")) < 9)
 days$school_year <- paste0(start_year, "-", substr(start_year + 1, 3, 4))
 
-young_tr$minor    <- young_tr$vic_age_group == "<18"
-young_tr$day_type <- ifelse(format(young_tr$occurred_on, "%u") %in% c("6", "7"), "Weekend", "Weekday")
-young_tr$month    <- format(young_tr$occurred_on, "%m")
+valid_age_tr$day_type <- ifelse(format(valid_age_tr$occurred_on, "%u") %in% c("6", "7"), "Weekend", "Weekday")
+valid_age_tr$month    <- format(valid_age_tr$occurred_on, "%m")
 n_days <- days |> count(school_day, name = "n_days")
 
 
 
 
-# ----------------- Experimenting with Plotly
+# ----------------- Experimenting with Plotly ----------------------
 
 
 # 1. I'll start by applying it to the weekday share of underage victims per hour 
-minor_counts_tr <- young_tr |> filter(minor, day_type == "Weekday") |> count(hour)
+minor_counts_tr <- valid_age_tr |> filter(minor, day_type == "Weekday") |> count(hour)
 
 minor_counts_tr_plt <- ggplot(minor_counts_tr, aes(x = hour, y = n)) +
   geom_line(linewidth = 1.2, colour = orange) +
@@ -124,30 +125,41 @@ ggplotly(minor_counts_tr_plt)
 
 
 # 2. Adding onto the previous plot's complexity, let's see school vs summer
-
-minor_season_tr <- young_tr |> filter(day_type == "Weekday")
+minor_season_tr <- valid_age_tr |> filter(day_type == "Weekday")
 minor_season_tr$season <- ifelse(minor_season_tr$month %in% c("07", "08"), "Summer (Jul-Aug)", "School months")
 
 minor_pct_season_tr <- minor_season_tr |>
   group_by(season, hour) |>
-  summarise(n_all = n(), n_minor = sum(minor), percentage = n_minor / n_all, .groups = "drop")
+  summarise(percentage = mean(minor), .groups = "drop")
 
-minor_pct_season_tr$hover <- paste0(minor_pct_season_tr$season, ", ", minor_pct_season_tr$hour, "h: ",
-                                    scales::percent(minor_pct_season_tr$percentage, accuracy = 0.1),
-                                    " (", minor_pct_season_tr$n_minor, " underage of ",
-                                    minor_pct_season_tr$n_all, " victims)")
-
-minor_pct_season_tr_plt <- ggplot(minor_pct_season_tr, aes(x = hour, y = percentage, colour = season, group = season)) +
+school_vs_summer <- ggplot(minor_pct_season_tr, aes(x = hour, y = percentage, colour = season, group = season)) +
   geom_line(linewidth = 1.2) +
-  geom_point(aes(text = hover), size = 2) +          # 2. the hover text goes on the points
+  geom_point(size = 2) +
   scale_colour_manual(values = c("School months" = orange, "Summer (Jul-Aug)" = gold)) +
   scale_x_continuous(breaks = 0:23) +
   scale_y_continuous(labels = scales::percent, limits = c(0, NA)) +
-  labs(x = "Hour of occurrence", y = "Percentage of Underage Victims", colour = NULL) +
+  labs(title = "Weekday Percentage of Underage Victims (Public Transportation, School Months vs Summer)",
+       x = "Hour of occurrence", y = "Percentage of Underage Victims", colour = NULL) +
   theme_minimal()
 
-ggplotly(minor_pct_season_tr_plt)
+ggplotly(school_vs_summer)
 
 
-# 3 Now, I'd like to adapt my 4 panel static plot to interactively choose
-# which comparison I want to make
+# I can also add every other line plot for non-school instances and click on
+# their legend to eliminate them or compare more than one at once 
+# (new colors added to be able to compare them properly)
+
+
+valid_age_tr <- left_join(valid_age_tr, days, by = "occurred_on")
+names(valid_age_tr)
+
+minor_pct_all_seasons <- valid_age_tr |> 
+      filter(school_day %in% c("Classes", reasons)) |>
+      group_by(school_day, hour) |>
+      summarise(n_all = n(), n_minor = sum(minor), percentage = n_minor / n_all, .groups = "drops")
+      
+                         
+  
+
+
+
