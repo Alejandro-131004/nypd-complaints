@@ -33,7 +33,7 @@ nypd <- subset(nypd, report_year >= 2020 & report_year <= 2025)
 nypd <- as.data.frame(nypd)
 nypd <- nypd |> filter(!old_occurrence)
 
-dir.create("fig/03_interaction/underage_public_transport_interactive", showWarnings = FALSE, recursive = TRUE)
+dir.create("fig/03_interactive/underage_public_transport", showWarnings = FALSE, recursive = TRUE)
 
 
 # As suggested in this week's powerpoint, I'm going to start by re-running
@@ -121,7 +121,7 @@ ggplotly(minor_counts_tr_plt)
 # It's really interesting to see the count by hovering over a specific point.
 # I think this'll be especially useful in percentage/share plots, as we'll
 # get to have context of both percentage and raw values at once, something
-# I'd been struggling with
+# I'd been struggling with.
 
 
 # 2. Adding onto the previous plot's complexity, let's see school vs summer
@@ -161,7 +161,7 @@ minor_pct_all_seasons <- valid_age_tr |>
                 percentage = n_minor / n_all, .groups = "drop")
 
 
-all_seasons_pct_plt <- ggplot(minor_pct_all_seasons, aes(x=hour, y=percentage ,
+all_seasons_pct_plt <- ggplot(minor_pct_all_seasons, aes(x=hour, y=percentage,
                                                          colour=school_day,
                                                          n = n_minor)) +
     #group=school_day isn't needed and was duplicating values in the text box
@@ -193,4 +193,12 @@ all_seasons_interactive <- style(all_seasons_interactive, visible="legendonly",
                                  traces = c(2, 3, 4))
 
 all_seasons_interactive
+
+
+# Another interesting thing I would like to do is observe the point distribution
+# in daily underage public transportation crime per boro, since we have lat-lon,
+# but I don't know how I'd scale the space.
+
+# Was overriding self contained for other folders, don-t know why. I moved it after.
+htmlwidgets::saveWidget(all_seasons_interactive, "interactive_daily_tr_minor_crime_seasons.html",selfcontained = TRUE)
 
