@@ -163,7 +163,9 @@ minor_pct_all_seasons <- valid_age_tr |>
 
 all_seasons_pct_plt <- ggplot(minor_pct_all_seasons, aes(x=hour, y=percentage ,
                                                          colour=school_day,
-                                                         group=school_day)) +
+                                                         n = n_minor)) +
+    #group=school_day isn't needed and was duplicating values in the text box
+  
     geom_line(linewidth=1.2) + geom_point(size=2)  +
     
     # Specific color choices for easier differencing
@@ -178,7 +180,7 @@ all_seasons_pct_plt <- ggplot(minor_pct_all_seasons, aes(x=hour, y=percentage ,
   labs(title=paste0("Percentage of Underage Victims per Hour (All Seasons, Public Transportation)"), 
       x="Time of Day", y="Percentage of Underage Victims", caption=source_cal)
 
-all_seasons_pct_plt
+# all_seasons_pct_plt
 
 ggplotly(all_seasons_pct_plt)
   
